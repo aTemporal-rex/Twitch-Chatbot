@@ -30,10 +30,12 @@ function onMessageHandler (target, context, msg, self) {
     const commandName = msg.trim();
 
     // If the command is known, let's execute it
-    if (commandName === '!d20') {
-        const num = rollDice(commandName);
-        client.say(target, `You rolled a ${num}.`);
-        console.log(`* Executed ${commandName} command`);
+    if (commandName === 'anime' || commandName === 'Anime') {
+        // const num = rollDice(commandName);
+        // client.say(target, `You rolled a ${num}.`);
+        // console.log(`* Executed ${commandName} command`);
+    } else if (commandName === 'manga' || commandName === 'Manga') {
+
     } else {
         console.log(`* Unknown command ${commandName}`);
     }
