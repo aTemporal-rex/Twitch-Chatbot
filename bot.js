@@ -1,4 +1,6 @@
 const tmi = require('tmi.js');
+const { getAnime } = require('./animesgetter');
+const { getManga } = require('./mangasgetter');
 require('dotenv').config();
 
 // Define configuration options
@@ -23,28 +25,40 @@ client.on('connected', onConnectedHandler);
 client.connect();
 
 // Called every time a message comes in
-function onMessageHandler (target, context, msg, self) {
+async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
     // Remove whitespace from chat message
     const commandName = msg.trim();
 
     // If the command is known, let's execute it
-    if (commandName === 'anime' || commandName === 'Anime') {
-        // const num = rollDice(commandName);
-        // client.say(target, `You rolled a ${num}.`);
-        // console.log(`* Executed ${commandName} command`);
-    } else if (commandName === 'manga' || commandName === 'Manga') {
+    if (commandName === '!anime' || commandName === '!Anime') {
+
+        console.log(`* Executed ${commandName} command`);
+        const media = await getAnime();
+        if (media === undefined) {
+            client.say(target, 'Page count needs to be updated');
+            console.log('Page count needs to be updated');
+            return;
+        }
+        client.say(target, `Your next favorite anime is ${media}`);
+        // client.say(target, `Your next favorite anime is ${media.title.english ? media.title.english : media.title.romaji} ${media.siteUrl}`);
+
+    } else if (commandName === '!manga' || commandName === '!Manga') {
+
+        console.log(`* Executed ${commandName} command`);
+        const media = await getManga();
+        if (media === undefined) {
+            client.say(target, 'Page count needs to be updated');
+            console.log('Page count needs to be updated');
+            return;
+        }
+        client.say(target, `Your next favorite manga is ${media}`);
+        // client.say(target, `Your next favorite manga is ${media.title.english ? media.title.english : media.title.romaji} ${media.siteUrl}`);
 
     } else {
         console.log(`* Unknown command ${commandName}`);
     }
-}
-
-// Function called when the "dice" command is issued
-function rollDice () {
-    const sides = 6;
-    return Math.floor(Math.random() * sides) + 1;
 }
 
 // Called everytime the bot connects to Twitch chat

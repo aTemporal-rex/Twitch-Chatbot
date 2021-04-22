@@ -1,6 +1,5 @@
-const express = require('express');
-const { graphqlHTTP } = require('express-graphql');
-const { buildSchema } = require('graphql');
+// DOESN'T DO ANYTHING YET********************************
+// *******************************************************
 const fetch = require("node-fetch");
 
 let pageCount;

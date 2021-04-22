@@ -1,10 +1,6 @@
 const fetch = require("node-fetch");
 const pageCount = 1285;
 
-// const PageGetter = require('./pagegetter');
-// Jank way to attempt to wait for PageGetter.pageCount to have a value
-// PageGetter.pageCount = PageGetter.pageCount || 1603;
-
 const query = `
 query ($page: Int) {
   Page (page: $page) {
@@ -12,6 +8,7 @@ query ($page: Int) {
       lastPage
     }
     media (type: MANGA) {
+      siteUrl
       isAdult
       type
       title {
@@ -23,54 +20,54 @@ query ($page: Int) {
 }
 `;
 
-const variables = {
-    page: Math.floor(Math.random() * pageCount)
-};
-
-const url = 'https://graphql.anilist.co',
-    options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
+module.exports.getManga = async () => {
+    const variables = {
+        page: Math.floor(Math.random() * pageCount)
     };
 
-fetch(url, options).then(handleResponse)
-                   .then(handleData)
-                   .catch(handleError);
+    const url = 'https://graphql.anilist.co',
+        options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                variables: variables
+            })
+        };
 
-function handleResponse(response) {
+    console.log(`Current Page: ${variables.page}`);
+
+    return fetch(url, options).then(handleResponse).then(handleData).catch(handleError);
+}
+
+async function handleResponse(response) {
     return response.json().then(function (json) {
         return response.ok ? json : Promise.reject(json);
     });
 }
 
 // Formats the received data and displays it
-function handleData(data, typeRequested) {
+async function handleData(data) {
+    console.log(`Total Pages: ${data.data.Page.pageInfo.lastPage}`);
+
     // Filtering out adult content
     const medias = data.data.Page.media.filter(media => media.isAdult === false);
 
     // Selecting a random manga
     const media = medias[Math.floor(Math.random() * medias.length)].title;
+    // const media = medias[Math.floor(Math.random() * medias.length)];
+    // const title = media.title;
 
     // Displaying english title if it exists, otherwise displaying romaji title
-    media.english ? console.log(`Your next favorite manga is ${media.english}`) : console.log(`Your next favorite manga is ${media.romaji}`);
+    media.english ? console.log(`Your next favorite manga is ${media.english}\n`) : console.log(`Your next favorite manga is ${media.romaji}\n`);
+    // title.english ? console.log(`Your next favorite manga is ${title.english}\n`) : console.log(`Your next favorite manga is ${title.romaji}\n`);
+    return media.english ? media.english : media.romaji;
+    // return media;
 }
 
 function handleError(error) {
     console.error(error);
 }
- 
-// var app = express();
-// app.use('/graphql', graphqlHTTP({
-//   schema: schema,
-//   rootValue: root,
-//   graphiql: true,
-// }));
-// app.listen(4000);
-// console.log('Running a GraphQL API server at localhost:4000/graphql');
