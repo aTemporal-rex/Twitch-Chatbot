@@ -1,6 +1,3 @@
-const express = require('express');
-const { graphqlHTTP } = require('express-graphql');
-const { buildSchema } = require('graphql');
 const fetch = require("node-fetch");
 const pageCount = 1285;
 
@@ -63,7 +60,6 @@ function handleData(data, typeRequested) {
 
     // Displaying english title if it exists, otherwise displaying romaji title
     media.english ? console.log(`Your next favorite manga is ${media.english}`) : console.log(`Your next favorite manga is ${media.romaji}`);
-    console.log(data.data.Page.pageInfo.lastPage);
 }
 
 function handleError(error) {
