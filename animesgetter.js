@@ -1,5 +1,4 @@
-const fetch = require("node-fetch");
-const pageCount = 319;
+const fetch = require("node-fetch"); // Required to use fetch in node.js
 
 const query = `
 query ($page: Int) {
@@ -11,7 +10,6 @@ query ($page: Int) {
     media (type: ANIME) {
       siteUrl
       isAdult
-      type
       title {
         romaji
         english
@@ -21,9 +19,10 @@ query ($page: Int) {
 }
 `;
 
-module.exports.getAnime = async () => {
+// This function selects a random anime from all of those listed on anilist
+module.exports.getAnime = async (animePageCount) => {
     const variables = {
-        page: Math.floor(Math.random() * pageCount)
+        page: Math.floor(Math.random() * animePageCount) // Randomizes the page from which to select an anime
     };
 
     const url = 'https://graphql.anilist.co',
@@ -70,5 +69,6 @@ async function handleData(data) {
 }
 
 async function handleError(error) {
+    console.log('Error, check console');
     console.error(error);
 }

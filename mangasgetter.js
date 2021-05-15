@@ -1,5 +1,4 @@
-const fetch = require("node-fetch");
-const pageCount = 1285;
+const fetch = require("node-fetch"); // Required to use fetch in node.js
 
 const query = `
 query ($page: Int) {
@@ -20,9 +19,9 @@ query ($page: Int) {
 }
 `;
 
-module.exports.getManga = async () => {
+module.exports.getManga = async (mangaPageCount) => {
     const variables = {
-        page: Math.floor(Math.random() * pageCount)
+        page: Math.floor(Math.random() * mangaPageCount) // Randomizes the page from which to select a manga
     };
 
     const url = 'https://graphql.anilist.co',
@@ -69,5 +68,6 @@ async function handleData(data) {
 }
 
 function handleError(error) {
+    console.log('Error, check console');
     console.error(error);
 }
