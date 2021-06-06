@@ -27,6 +27,7 @@ client.on('connected', onConnectedHandler);
 // Connect to Twitch
 client.connect();
 
+// Get total number of pages for the list of manga or anime
 const getPageCounts = async () => {
     animePageCount = await getAnimePageCount();
     mangaPageCount = await getMangaPageCount();

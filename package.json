@@ -1,14 +1,19 @@
 {
-  "name": "bunnySenpaiBot",
+  "name": "bunny-senpai-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Twitch Bot with some Animoo Features",
   "main": "bot.js",
   "dependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-graphql": "^0.12.0",
+    "express-session": "^1.17.2",
     "graphql": "^15.5.0",
+    "handlebars": "^4.7.7",
     "node-fetch": "^2.6.1",
+    "passport": "^0.4.1",
+    "passport-oauth": "^1.0.0",
+    "request": "^2.88.2",
     "tmi.js": "^1.8.3"
   },
   "devDependencies": {},
@@ -16,6 +21,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "aTemporal",
   "license": "ISC"
 }

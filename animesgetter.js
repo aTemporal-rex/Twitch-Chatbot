@@ -4,7 +4,6 @@ const query = `
 query ($page: Int) {
   Page (page: $page) {
     pageInfo {
-      currentPage
       lastPage
     }
     media (type: ANIME) {

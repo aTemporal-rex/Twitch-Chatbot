@@ -19,6 +19,7 @@ query ($page: Int) {
 }
 `;
 
+// This function selects a random manga from all of those listed on anilist
 module.exports.getManga = async (mangaPageCount) => {
     const variables = {
         page: Math.floor(Math.random() * mangaPageCount) // Randomizes the page from which to select a manga
