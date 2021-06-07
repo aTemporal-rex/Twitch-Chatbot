@@ -4,6 +4,8 @@ const { getManga } = require('./mangasgetter');
 const { getAnimePageCount, getMangaPageCount } = require('./pagegetter');
 require('dotenv').config();
 
+const cooldown = 3000; // Command cooldown in milliseconds
+let cmdLastUsed = 0; // Time last command was used
 let animePageCount, mangaPageCount;
 
 // Define configuration options
@@ -46,6 +48,16 @@ async function onMessageHandler (target, context, msg, self) {
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
+    }
+
+    // Manages a global command cooldown
+    if (commandName === "!anime" || commandName === "!manga") {
+        if (cmdLastUsed >= (Date.now() - cooldown)) {
+            console.log("Command is on cooldown.");
+            return; 
+        }
+
+        cmdLastUsed = Date.now();
     }
 
     // If the command is known, let's execute it
