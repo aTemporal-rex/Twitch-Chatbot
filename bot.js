@@ -74,6 +74,19 @@ async function onMessageHandler (target, context, msg, self) {
 }
 
 // Called everytime the bot connects to Twitch chat
-function onConnectedHandler (addr, port) {
+async function onConnectedHandler (addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
+
+    // Change client color
+    client.color("HotPink");
+
+    // Declare the glorious arrival of Bunny Senpai Bot
+    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! bunnyHi");
 }
+
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+   console.log(`listening on port ${port}`);
+});
