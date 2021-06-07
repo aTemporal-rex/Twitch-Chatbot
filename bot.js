@@ -37,8 +37,8 @@ const getPageCounts = async () => {
 async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
-    // Remove whitespace from chat message
-    const commandName = msg.trim();
+    // Remove whitespace from chat message and make it lowercase
+    const commandName = msg.trim().toLowerCase();
 
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -46,7 +46,7 @@ async function onMessageHandler (target, context, msg, self) {
     }
 
     // If the command is known, let's execute it
-    if (commandName === '!anime' || commandName === '!Anime') {
+    if (commandName === '!anime') {
 
         console.log(`* Executed ${commandName} command`);
         const media = await getAnime(animePageCount);
@@ -57,7 +57,7 @@ async function onMessageHandler (target, context, msg, self) {
         client.say(target, `Your next favorite anime is ${media} TehePelo`);
         // client.say(target, `Your next favorite anime is ${media.title.english ? media.title.english : media.title.romaji} ${media.siteUrl}`);
 
-    } else if (commandName === '!manga' || commandName === '!Manga') {
+    } else if (commandName === '!manga') {
 
         console.log(`* Executed ${commandName} command`);
         const media = await getManga(mangaPageCount);
