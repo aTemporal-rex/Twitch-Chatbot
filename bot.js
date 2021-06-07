@@ -96,7 +96,7 @@ async function onConnectedHandler (addr, port) {
     client.color("HotPink");
 
     // Declare the glorious arrival of Bunny Senpai Bot
-    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! bunnyHi");
+    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! dittoDumper");
 }
 
 // This is necessary to prevent heroku from disconnecting
