@@ -8,6 +8,9 @@ let animePageCount, mangaPageCount;
 
 // Define configuration options
 const opts = {
+    options: {
+        clientId: process.env.CLIENT_ID
+    },
     identity: {
         username: process.env.BOT_USERNAME,
         password: process.env.OAUTH_TOKEN
@@ -84,6 +87,7 @@ async function onConnectedHandler (addr, port) {
     client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! bunnyHi");
 }
 
+// This is necessary to prevent heroku from disconnecting
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
