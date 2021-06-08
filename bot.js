@@ -4,9 +4,9 @@ const { getManga } = require('./mangasgetter');
 const { getAnimePageCount, getMangaPageCount } = require('./pagegetter');
 require('dotenv').config();
 
-const cooldown = 3000; // Command cooldown in milliseconds
-let cmdLastUsed = 0; // Time last command was used
-let animePageCount, mangaPageCount;
+const cooldown = 3000;  // Command cooldown in milliseconds
+let timePrevCmd = 0,    // Time at which previous command was used; used for cooldown
+    animePageCount, mangaPageCount;
 
 // Define configuration options
 const opts = {
@@ -42,9 +42,26 @@ const getPageCounts = async () => {
 async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
-    // Remove whitespace from chat message and make it lowercase
-    const commandName = msg.trim().toLowerCase();
+    // Check if msg is a command
+    if (msg.startsWith("!")) {
+        const commandName = msg.trim().toLowerCase();   // Remove whitespace from chat message and make it lowercase
+        await onCommandHandler(target, commandName);    // Handle the command
+    }
+}
 
+// Called everytime the bot connects to Twitch chat
+async function onConnectedHandler (addr, port) {
+    console.log(`* Connected to ${addr}:${port}`);
+
+    // Change client color
+    client.color("HotPink");
+
+    // Declare the glorious arrival of Bunny Senpai Bot
+    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! dittoDumper");
+}
+
+// Called everytime a command is given
+async function onCommandHandler (target, commandName) {
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
@@ -52,12 +69,11 @@ async function onMessageHandler (target, context, msg, self) {
 
     // Manages a global command cooldown
     if (commandName === "!anime" || commandName === "!manga") {
-        if (cmdLastUsed >= (Date.now() - cooldown)) {
+        if (timePrevCmd >= (Date.now() - cooldown)) {
             console.log("Command is on cooldown.");
             return; 
         }
-
-        cmdLastUsed = Date.now();
+        timePrevCmd = Date.now();
     }
 
     // If the command is known, let's execute it
@@ -86,17 +102,6 @@ async function onMessageHandler (target, context, msg, self) {
     } else {
         console.log(`* Unknown command ${commandName}`);
     }
-}
-
-// Called everytime the bot connects to Twitch chat
-async function onConnectedHandler (addr, port) {
-    console.log(`* Connected to ${addr}:${port}`);
-
-    // Change client color
-    client.color("HotPink");
-
-    // Declare the glorious arrival of Bunny Senpai Bot
-    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! dittoDumper");
 }
 
 // This is necessary to prevent heroku from disconnecting
