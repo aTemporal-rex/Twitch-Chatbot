@@ -3,7 +3,6 @@ const { getQuery } = require('./querygetter');
 
 // This function selects a random anime from all of those listed on anilist
 module.exports.getAnime = async (queryType, animePageCount, averageScore) => {
-    
     const query = getQuery(queryType, `ANIME`);
 
     const variables = {

@@ -5,7 +5,8 @@ const { getPageCount } = require('./pagegetter');
 require('dotenv').config();
 
 const cooldown = 3000;                  // Command cooldown in milliseconds
-const regex = /^!anime[0-9]{1,2}?$/;    // Regex checks if command !anime is followed by 1 or 2 digits
+const reAnime = /^!anime[0-9]{1,2}?$/,  // Regex checks if command !anime is followed by 1 or 2 digits
+      reManga = /^!manga[0-9]{1,2}?$/;
 let timePrevCmd = 0,                    // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
@@ -41,8 +42,8 @@ const getPageCounts = async () => {
 }
 
 // Get total number of pages for the anime or manga with an average score greater than or equal to the requested value
-const getPageCountAvgScore = async () => {
-    avgScorePageCount = await getPageCount(`ANIME`, averageScore);
+const getPageCountAvgScore = async (mediaType) => {
+    avgScorePageCount = await getPageCount(mediaType, averageScore);
 }
 
 // Called every time a message comes in
@@ -75,7 +76,7 @@ async function onCommandHandler (target, commandName) {
     }
 
     // Manages a global command cooldown
-    if (commandName === '!anime' || commandName === '!manga' || regex.test(commandName)) {
+    if (commandName === '!anime' || commandName === '!manga' || reAnime.test(commandName) || reManga.test(commandName)) {
         if (timePrevCmd >= (Date.now() - cooldown)) {
             console.log('Command is on cooldown.');
             return; 
@@ -84,45 +85,64 @@ async function onCommandHandler (target, commandName) {
     }
 
     // Checks if command matches regex for !anime{2 or 1 digits number} command
-    // If it matches then it assigns that number to average score and gets the pageCount for that custom list of anime/manga
-    if (regex.test(commandName)) {
+    // If it matches then it removes non-digits and assigns the digits to average score
+    // Then it gets just the letters from the command, uppercases them, and passes them to the getPageCountAvgScore function
+    if (reAnime.test(commandName) || reManga.test(commandName)) {
+        const mediaType = commandName.replace(/[^a-z]+/g, '').toUpperCase();
         averageScore = commandName.replace(/\D/g, "");
-        await getPageCountAvgScore();
+
+        await getPageCountAvgScore(`${mediaType}`);
     }
-    
-    // If the command is known, let's execute it
-    if (commandName === '!anime') {
+    try {
+        // If the command is known, let's execute it
+        if (commandName === '!anime') {
 
-        console.log(`* Executed ${commandName} command`);
-        const media = await getAnime('all', animePageCount);
-        if (media === undefined) {
-            console.log('Page count needs to be updated');
-            return;
+            console.log(`* Executed ${commandName} command`);
+            const media = await getAnime('all', animePageCount);
+            if (media === undefined) {
+                console.log('Media was undefined');
+                return;
+            }
+            client.say(target, `Your next favorite anime is ${media} TehePelo`);
+
+        } else if (commandName === '!manga') {
+
+            console.log(`* Executed ${commandName} command`);
+            const media = await getManga('all', mangaPageCount);
+            if (media === undefined) {
+                console.log('Media was undefined');
+                return;
+            }
+            client.say(target, `Your next favorite manga is ${media} TehePelo`);
+
+        } else if (commandName === `!anime${averageScore}`) {
+
+            console.log(`* Executed ${commandName} command`);
+            const media = await getAnime('greater', avgScorePageCount, averageScore);
+            if (media === undefined) {
+                console.log('Media was undefined');
+                return;
+            }
+            client.say(target, `Your next favorite anime is ${media} TehePelo`);
+
+        } else if (commandName === `!manga${averageScore}`) {
+
+            console.log(`* Executed ${commandName} command`);
+            const media = await getManga('greater', avgScorePageCount, averageScore);
+            if (media === undefined) {
+                console.log('Media was undefined');
+                return;
+            }
+            client.say(target, `Your next favorite manga is ${media} TehePelo`);
+            
+        } else {
+            console.log(`* Unknown command ${commandName}`);
         }
-        client.say(target, `Your next favorite anime is ${media} TehePelo`);
 
-    } else if (commandName === '!manga') {
-
-        console.log(`* Executed ${commandName} command`);
-        const media = await getManga('all', mangaPageCount);
-        if (media === undefined) {
-            console.log('Page count needs to be updated');
-            return;
-        }
-        client.say(target, `Your next favorite manga is ${media} TehePelo`);
-
-    } else if (commandName === `!anime${averageScore}`) {
-        
-        console.log(`* Executed ${commandName} command`);
-        const media = await getAnime('greater', avgScorePageCount, averageScore);
-        if (media === undefined) {
-            return;
-        }
-        client.say(target, `Your next favorite anime is ${media} TehePelo`);
-
-    } else {
-        console.log(`* Unknown command ${commandName}`);
+    } catch (err) {
+        console.log(err);
     }
+
 }
 
 // This is necessary to prevent heroku from disconnecting
