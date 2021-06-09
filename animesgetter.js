@@ -1,12 +1,12 @@
-const fetch = require("node-fetch"); // Required to use fetch in node.js
+const fetch = require('node-fetch'); // Required to use fetch in node.js
 
-const query = `
-query ($page: Int) {
+const queryAll = `
+query ($page: Int, $isAdult: Boolean) {
   Page (page: $page) {
     pageInfo {
       lastPage
     }
-    media (type: ANIME) {
+    media (type: ANIME, isAdult: $isAdult) {
       siteUrl
       isAdult
       title {
@@ -18,10 +18,31 @@ query ($page: Int) {
 }
 `;
 
+const queryTop100 = `
+query ($page: Int) {
+  Page (page: $page) {
+    pageInfo {
+      total
+      lastPage
+    }
+    media (type: ANIME) {
+      siteUrl
+      isAdult
+      averageScore
+      title {
+        romaji
+        english
+      }
+    }
+  }
+}
+`
+
 // This function selects a random anime from all of those listed on anilist
 module.exports.getAnime = async (animePageCount) => {
     const variables = {
-        page: Math.floor(Math.random() * animePageCount) // Randomizes the page from which to select an anime
+        page: Math.floor(Math.random() * animePageCount), // Randomizes the page from which to select an anime
+        isAdult: false
     };
 
     const url = 'https://graphql.anilist.co',
@@ -32,7 +53,7 @@ module.exports.getAnime = async (animePageCount) => {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                query: query,
+                query: queryAll,
                 variables: variables
             })
         };
@@ -51,20 +72,17 @@ async function handleResponse(response) {
 // Formats the received data and displays it
 async function handleData(data) {
     console.log(`Total Pages: ${data.data.Page.pageInfo.lastPage}`);
-
-    // Filtering out adult content
-    const medias = data.data.Page.media.filter(media => media.isAdult === false);
+    
+    // Getting just the media array
+    const medias = data.data.Page.media;
 
     // Selecting a random anime
     const media = medias[Math.floor(Math.random() * medias.length)].title;
-    // const media = medias[Math.floor(Math.random() * medias.length)];
-    // const title = media.title;
 
     // Displaying english title if it exists, otherwise displaying romaji title
     media.english ? console.log(`Your next favorite anime is ${media.english}\n`) : console.log(`Your next favorite anime is ${media.romaji}\n`);
-    // title.english ? console.log(`Your next favorite anime is ${title.english}\n`) : console.log(`Your next favorite anime is ${title.romaji}\n`);
     return media.english ? media.english : media.romaji;
-    // return media;
+
 }
 
 async function handleError(error) {

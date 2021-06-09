@@ -1,12 +1,12 @@
-const fetch = require("node-fetch"); // Required to use fetch in node.js
+const fetch = require('node-fetch'); // Required to use fetch in node.js
 
 const query = `
-query ($page: Int) {
+query ($page: Int, $isAdult: Boolean) {
   Page (page: $page) {
     pageInfo {
       lastPage
     }
-    media (type: MANGA) {
+    media (type: MANGA, isAdult: $isAdult) {
       siteUrl
       isAdult
       type
@@ -22,7 +22,8 @@ query ($page: Int) {
 // This function selects a random manga from all of those listed on anilist
 module.exports.getManga = async (mangaPageCount) => {
     const variables = {
-        page: Math.floor(Math.random() * mangaPageCount) // Randomizes the page from which to select a manga
+        page: Math.floor(Math.random() * mangaPageCount), // Randomizes the page from which to select a manga
+        isAdult: false
     };
 
     const url = 'https://graphql.anilist.co',
@@ -53,19 +54,15 @@ async function handleResponse(response) {
 async function handleData(data) {
     console.log(`Total Pages: ${data.data.Page.pageInfo.lastPage}`);
 
-    // Filtering out adult content
-    const medias = data.data.Page.media.filter(media => media.isAdult === false);
+    // Getting just the media array
+    const medias = data.data.Page.media;
 
     // Selecting a random manga
     const media = medias[Math.floor(Math.random() * medias.length)].title;
-    // const media = medias[Math.floor(Math.random() * medias.length)];
-    // const title = media.title;
 
     // Displaying english title if it exists, otherwise displaying romaji title
     media.english ? console.log(`Your next favorite manga is ${media.english}\n`) : console.log(`Your next favorite manga is ${media.romaji}\n`);
-    // title.english ? console.log(`Your next favorite manga is ${title.english}\n`) : console.log(`Your next favorite manga is ${title.romaji}\n`);
     return media.english ? media.english : media.romaji;
-    // return media;
 }
 
 function handleError(error) {

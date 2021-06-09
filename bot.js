@@ -43,7 +43,7 @@ async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
     // Check if msg is a command
-    if (msg.startsWith("!")) {
+    if (msg.startsWith('!')) {
         const commandName = msg.trim().toLowerCase();   // Remove whitespace from chat message and make it lowercase
         await onCommandHandler(target, commandName);    // Handle the command
     }
@@ -54,10 +54,10 @@ async function onConnectedHandler (addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
 
     // Change client color
-    client.color("HotPink");
+    client.color('HotPink');
 
     // Declare the glorious arrival of Bunny Senpai Bot
-    client.say(process.env.CHANNEL_NAME, "Bunny Senpai has arrived! dittoDumper");
+    client.say(process.env.CHANNEL_NAME, 'Bunny Senpai has arrived! dittoDumper');
 }
 
 // Called everytime a command is given
@@ -68,9 +68,9 @@ async function onCommandHandler (target, commandName) {
     }
 
     // Manages a global command cooldown
-    if (commandName === "!anime" || commandName === "!manga") {
+    if (commandName === '!anime' || commandName === '!manga') {
         if (timePrevCmd >= (Date.now() - cooldown)) {
-            console.log("Command is on cooldown.");
+            console.log('Command is on cooldown.');
             return; 
         }
         timePrevCmd = Date.now();
@@ -78,7 +78,7 @@ async function onCommandHandler (target, commandName) {
 
     // If the command is known, let's execute it
     if (commandName === '!anime') {
-
+        
         console.log(`* Executed ${commandName} command`);
         const media = await getAnime(animePageCount);
         if (media === undefined) {
@@ -86,7 +86,6 @@ async function onCommandHandler (target, commandName) {
             return;
         }
         client.say(target, `Your next favorite anime is ${media} TehePelo`);
-        // client.say(target, `Your next favorite anime is ${media.title.english ? media.title.english : media.title.romaji} ${media.siteUrl}`);
 
     } else if (commandName === '!manga') {
 
@@ -97,7 +96,6 @@ async function onCommandHandler (target, commandName) {
             return;
         }
         client.say(target, `Your next favorite manga is ${media} TehePelo`);
-        // client.say(target, `Your next favorite manga is ${media.title.english ? media.title.english : media.title.romaji} ${media.siteUrl}`);
 
     } else {
         console.log(`* Unknown command ${commandName}`);
