@@ -1,7 +1,7 @@
 const tmi = require('tmi.js');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
-const { getAnimePageCount, getMangaPageCount } = require('./pagegetter');
+const { getPageCount } = require('./pagegetter');
 require('dotenv').config();
 
 const cooldown = 3000;  // Command cooldown in milliseconds
@@ -32,10 +32,10 @@ client.on('connected', onConnectedHandler);
 // Connect to Twitch
 client.connect();
 
-// Get total number of pages for the list of manga or anime
+// Get total number of pages for the list of manga and anime
 const getPageCounts = async () => {
-    animePageCount = await getAnimePageCount();
-    mangaPageCount = await getMangaPageCount();
+    animePageCount = await getPageCount(`ANIME`);
+    mangaPageCount = await getPageCount(`MANGA`);
 }
 
 // Called every time a message comes in
@@ -78,9 +78,9 @@ async function onCommandHandler (target, commandName) {
 
     // If the command is known, let's execute it
     if (commandName === '!anime') {
-        
+
         console.log(`* Executed ${commandName} command`);
-        const media = await getAnime(animePageCount);
+        const media = await getAnime('all', animePageCount);
         if (media === undefined) {
             console.log('Page count needs to be updated');
             return;
@@ -90,7 +90,7 @@ async function onCommandHandler (target, commandName) {
     } else if (commandName === '!manga') {
 
         console.log(`* Executed ${commandName} command`);
-        const media = await getManga(mangaPageCount);
+        const media = await getManga('all', mangaPageCount);
         if (media === undefined) {
             console.log('Page count needs to be updated');
             return;

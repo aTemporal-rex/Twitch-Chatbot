@@ -1,22 +1,5 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
-
-const queryAll = `
-query ($page: Int, $isAdult: Boolean) {
-  Page (page: $page) {
-    pageInfo {
-      lastPage
-    }
-    media (type: ANIME, isAdult: $isAdult) {
-      siteUrl
-      isAdult
-      title {
-        romaji
-        english
-      }
-    }
-  }
-}
-`;
+const { getQuery } = require('./querygetter');
 
 const queryTop100 = `
 query ($page: Int) {
@@ -36,10 +19,12 @@ query ($page: Int) {
     }
   }
 }
-`
+`;
 
 // This function selects a random anime from all of those listed on anilist
-module.exports.getAnime = async (animePageCount) => {
+module.exports.getAnime = async (queryType, animePageCount) => {
+    const query = getQuery(queryType, `ANIME`)
+
     const variables = {
         page: Math.floor(Math.random() * animePageCount), // Randomizes the page from which to select an anime
         isAdult: false
@@ -53,7 +38,7 @@ module.exports.getAnime = async (animePageCount) => {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                query: queryAll,
+                query: query,
                 variables: variables
             })
         };

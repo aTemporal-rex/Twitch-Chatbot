@@ -1,26 +1,9 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
-
-const query = `
-query ($page: Int, $isAdult: Boolean) {
-  Page (page: $page) {
-    pageInfo {
-      lastPage
-    }
-    media (type: MANGA, isAdult: $isAdult) {
-      siteUrl
-      isAdult
-      type
-      title {
-        romaji
-        english
-      }
-    }
-  }
-}
-`;
+const { getQuery } = require('./querygetter');
 
 // This function selects a random manga from all of those listed on anilist
-module.exports.getManga = async (mangaPageCount) => {
+module.exports.getManga = async (queryType, mangaPageCount) => {
+    const query = getQuery(queryType, `MANGA`);
     const variables = {
         page: Math.floor(Math.random() * mangaPageCount), // Randomizes the page from which to select a manga
         isAdult: false

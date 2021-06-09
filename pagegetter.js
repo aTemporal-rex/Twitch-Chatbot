@@ -1,10 +1,9 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-const queryAnime = getQuery('all', `ANIME`);
-const queryManga = getQuery('all', `MANGA`);
+module.exports.getPageCount = async (mediaType) => {
+    const query = getQuery('pages', mediaType)
 
-module.exports.getAnimePageCount = async () => {
     const variables = {
         isAdult: false
     };
@@ -17,28 +16,7 @@ module.exports.getAnimePageCount = async () => {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                query: queryAnime,
-                variables: variables
-            })
-        };
-
-    return fetch(url, options).then(handleResponse).then(handleData).catch(handleError);
-}
-
-module.exports.getMangaPageCount = async () => {
-    const variables = {
-        isAdult: false
-    };
-    
-    const url = 'https://graphql.anilist.co',
-        options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                query: queryManga,
+                query: query,
                 variables: variables
             })
         };
@@ -60,21 +38,6 @@ async function handleError(error) {
     console.log('Error, check console');
     console.error(error);
 }
-
-// function getQuery (queryType) {
-//     return `
-//     query ($page: Int) {
-//       Page (page: $page) {
-//         pageInfo {
-//             lastPage
-//         }
-//         media (type: ${queryType}) {
-//             id
-//         }
-//       }
-//     }
-//     `;
-// }
 
 //module.exports.pageCount = pageCount;
 // exports.pageCount = pageCount;
