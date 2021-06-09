@@ -1,11 +1,13 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-module.exports.getPageCount = async (mediaType) => {
-    const query = getQuery('pages', mediaType)
+module.exports.getPageCount = async (mediaType, averageScore) => {
+    
+    const query = getQuery('pages', mediaType);
 
     const variables = {
-        isAdult: false
+        isAdult: false,
+        averageScore_greater: averageScore
     };
 
     const url = 'https://graphql.anilist.co',

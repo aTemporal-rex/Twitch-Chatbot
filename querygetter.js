@@ -2,12 +2,12 @@ module.exports.getQuery = (queryType, mediaType) => {
     switch (queryType) {
         case 'pages':
             return `
-            query ($page: Int, $isAdult: Boolean) {
+            query ($page: Int, $isAdult: Boolean, $averageScore_greater: Int) {
                 Page (page: $page) {
                     pageInfo {
                         lastPage
                     }
-                    media (type: ${mediaType}, isAdult: $isAdult) {
+                    media (type: ${mediaType}, isAdult: $isAdult, averageScore_greater: $averageScore_greater) {
                         id
                     }
                 }
@@ -31,6 +31,26 @@ module.exports.getQuery = (queryType, mediaType) => {
                 }
             }
             `;
+            case 'aboveAvgScore':
+                return `
+                query ($page: Int, $isAdult: Boolean, $averageScore_greater: Int) {
+                    Page (page: $page) {
+                        pageInfo {
+                            total
+                            lastPage
+                        }
+                        media (type: ${mediaType}, isAdult: $isAdult, averageScore_greater: $averageScore_greater) {
+                            siteUrl
+                            isAdult
+                            averageScore
+                            title {
+                                romaji
+                                english
+                            }
+                        }
+                    }
+                }
+                `;
         default:
             break;
     }

@@ -1,33 +1,15 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-const queryTop100 = `
-query ($page: Int) {
-  Page (page: $page) {
-    pageInfo {
-      total
-      lastPage
-    }
-    media (type: ANIME) {
-      siteUrl
-      isAdult
-      averageScore
-      title {
-        romaji
-        english
-      }
-    }
-  }
-}
-`;
-
 // This function selects a random anime from all of those listed on anilist
-module.exports.getAnime = async (queryType, animePageCount) => {
-    const query = getQuery(queryType, `ANIME`)
+module.exports.getAnime = async (queryType, animePageCount, averageScore) => {
+    
+    const query = getQuery(queryType, `ANIME`);
 
     const variables = {
         page: Math.floor(Math.random() * animePageCount), // Randomizes the page from which to select an anime
-        isAdult: false
+        isAdult: false,
+        averageScore_greater: averageScore
     };
 
     const url = 'https://graphql.anilist.co',
@@ -60,6 +42,7 @@ async function handleData(data) {
     
     // Getting just the media array
     const medias = data.data.Page.media;
+    // console.log(medias);
 
     // Selecting a random anime
     const media = medias[Math.floor(Math.random() * medias.length)].title;
