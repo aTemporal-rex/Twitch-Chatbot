@@ -5,9 +5,7 @@ const { getPageCount } = require('./pagegetter');
 require('dotenv').config();
 
 const cooldown = 3000;                  // Command cooldown in milliseconds
-const regex = /^!anime[0-9]{1,2}?$/,    // Regex checks if command !anime is followed by 1 or 2 digits
-      regex1 = /^!anime[0-9]{1}?$/,     // Regex checks if command !anime is followed by 1 digit
-      regex2 = /^!anime[0-9]{2}?$/;     // Regex checks if command !anime is followed by 2 digits
+const regex = /^!anime[0-9]{1,2}?$/;    // Regex checks if command !anime is followed by 1 or 2 digits
 let timePrevCmd = 0,                    // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
@@ -85,16 +83,11 @@ async function onCommandHandler (target, commandName) {
         timePrevCmd = Date.now();
     }
 
-    // Checks if the last 2 characters are numbers, then checks if last 1 character is a number
-    if (regex2.test(commandName)) {
-        averageScore = parseInt(commandName.substr(-2));
+    // Checks if command matches regex for !anime{2 or 1 digits number} command
+    // If it matches then it assigns that number to average score and gets the pageCount for that custom list of anime/manga
+    if (regex.test(commandName)) {
+        averageScore = commandName.replace(/\D/g, "");
         await getPageCountAvgScore();
-        console.log(avgScorePageCount);
-    }
-    else if (regex1.test(commandName)) {
-        averageScore = parseInt(commandName.substr(-1));
-        await getPageCountAvgScore();
-        console.log(avgScorePageCount);
     }
     
     // If the command is known, let's execute it
@@ -121,7 +114,7 @@ async function onCommandHandler (target, commandName) {
     } else if (commandName === `!anime${averageScore}`) {
         
         console.log(`* Executed ${commandName} command`);
-        const media = await getAnime('aboveAvgScore', avgScorePageCount, averageScore);
+        const media = await getAnime('greater', avgScorePageCount, averageScore);
         if (media === undefined) {
             return;
         }

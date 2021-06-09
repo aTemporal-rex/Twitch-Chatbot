@@ -31,7 +31,7 @@ module.exports.getQuery = (queryType, mediaType) => {
                 }
             }
             `;
-            case 'aboveAvgScore':
+            case 'greater':
                 return `
                 query ($page: Int, $isAdult: Boolean, $averageScore_greater: Int) {
                     Page (page: $page) {
