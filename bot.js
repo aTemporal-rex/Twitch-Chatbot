@@ -76,7 +76,7 @@ async function onCommandHandler (target, commandName) {
     }
 
     // Manages a global command cooldown
-    if (commandName === '!anime' || commandName === '!manga' || reAnime.test(commandName) || reManga.test(commandName) || commandName === '!callu') {
+    if (commandName === '!anime' || commandName === '!manga' || reAnime.test(commandName) || reManga.test(commandName)) {
         if (timePrevCmd >= (Date.now() - cooldown)) {
             console.log('Command is on cooldown.');
             return; 
@@ -137,8 +137,6 @@ async function onCommandHandler (target, commandName) {
             }
             client.say(target, `Your next favorite manga is ${media} TehePelo`);
             
-        } else if (commandName === '!callu') {
-            client.say(target, "Callummazoo: Erased isn't my favorite anime, it's poopy PunOko");
         } else {
             console.log(`* Unknown command ${commandName}`);
         }
