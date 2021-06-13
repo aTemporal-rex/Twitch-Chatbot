@@ -13,11 +13,14 @@ const app = express();
 const options = {upsert: true, new: true};
 
 const cooldown = 3000;                  // Command cooldown in milliseconds
-const reAnime = /^!anime[0-9]{1,2}?$/,  // Regex checks if command !anime is followed by 1 or 2 digits
-      reManga = /^!manga[0-9]{1,2}?$/,
-      reAdd = /^!baddcommand ![\w]+ [\w\W]*$/,
-      reRemove = /^!bremovecommand ![\w]+$/,
-      reCheck = /^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^!baddcommand ![\w]+ [\w\W]*$|^!bremovecommand ![\w]+$/;
+const reAnime = /^!anime{1}?$/i,
+      reManga = /^!manga{1}?$/i,
+      reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
+      reMangaS = /^!manga[0-9]{1,2}?$/i,  // Regex checks if command !manga is followed by 1 or 2 digits
+      reAdd = /^!baddcommand ![\w]+ [\w\W]*$/i,
+      reRemove = /^!bremovecommand ![\w]+$/i,
+      reSimple = /^![\w]+$/i,
+      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^!baddcommand ![\w]+ [\w\W]*$|^!bremovecommand ![\w]+$|^![\w]+$/i;
 let timePrevCmd = 0,                    // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
@@ -67,7 +70,7 @@ async function onMessageHandler (target, context, msg, self) {
 
     // Check if msg is a command
     if (msg.startsWith('!')) {
-        const commandName = msg.trim().toLowerCase();   // Remove whitespace from chat message and make it lowercase
+        const commandName = msg.trim();   // Remove whitespace from chat message
         await onCommandHandler(target, context, commandName);    // Handle the command
     }
 }
@@ -89,9 +92,9 @@ async function onCommandHandler (target, context, commandName) {
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
     }
-
+    
     // Manages a global command cooldown
-    if (commandName === '!anime' || commandName === '!manga' || reCheck.test(commandName)) {
+    if (reCheck.test(commandName)) {
         if (timePrevCmd >= (Date.now() - cooldown)) {
             console.log('Command is on cooldown.');
             return; 
@@ -102,17 +105,17 @@ async function onCommandHandler (target, context, commandName) {
     // Checks if command matches regex for !anime{2 or 1 digits number} command
     // If it matches then it removes non-digits and assigns the digits to average score
     // Then it gets just the letters from the command, uppercases them, and passes them to the getPageCountAvgScore function
-    if (reAnime.test(commandName) || reManga.test(commandName)) {
-        const mediaType = commandName.replace(/[^a-z]+/g, '').toUpperCase();
-        averageScore = commandName.replace(/\D/g, "");
+    if (reAnimeS.test(commandName) || reMangaS.test(commandName)) {
+        const mediaType = commandName.replace(/[^A-Za-z]+/g, '').toUpperCase();
+        averageScore = commandName.replace(/\D/g, '');
 
         await getPageCountAvgScore(`${mediaType}`);
     }
     try {
         // If the command is known, let's execute it
-        if (commandName === '!anime') {
+        if (reAnime.test(commandName)) {
 
-            console.log(`* Executed ${commandName} command`);
+            logCommand(commandName);
             const media = await getAnime('all', animePageCount);
             if (media === undefined) {
                 console.log('Media was undefined');
@@ -120,9 +123,9 @@ async function onCommandHandler (target, context, commandName) {
             }
             client.say(target, `Your next favorite anime is ${media} TehePelo`);
 
-        } else if (commandName === '!manga') {
-
-            console.log(`* Executed ${commandName} command`);
+        } else if (reManga.test(commandName)) {
+            
+            logCommand(commandName);
             const media = await getManga('all', mangaPageCount);
             if (media === undefined) {
                 console.log('Media was undefined');
@@ -130,9 +133,9 @@ async function onCommandHandler (target, context, commandName) {
             }
             client.say(target, `Your next favorite manga is ${media} TehePelo`);
 
-        } else if (commandName === `!anime${averageScore}`) {
+        } else if (reAnimeS.test(commandName)) {
 
-            console.log(`* Executed ${commandName} command`);
+            logCommand(commandName);
             const media = await getAnime('greater', avgScorePageCount, averageScore);
             if (media === undefined) {
                 console.log('Media was undefined');
@@ -140,9 +143,9 @@ async function onCommandHandler (target, context, commandName) {
             }
             client.say(target, `Your next favorite anime is ${media} TehePelo`);
 
-        } else if (commandName === `!manga${averageScore}`) {
+        } else if (reMangaS.test(commandName)) {
 
-            console.log(`* Executed ${commandName} command`);
+            logCommand(commandName);
             const media = await getManga('greater', avgScorePageCount, averageScore);
             if (media === undefined) {
                 console.log('Media was undefined');
@@ -152,27 +155,35 @@ async function onCommandHandler (target, context, commandName) {
             
         } else if (reAdd.test(commandName) && (context.badges.broadcaster || context.mod)) {
             
-            console.log(`* Executed ${commandName} command`);
             const newCommand = {
-                name: commandName.split(" ").slice(1, 2).toString(),
-                response: commandName.split(" ").slice(2).join(' ').toString()
+                name: commandName.split(' ').slice(1, 2).toString(),
+                response: commandName.split(' ').slice(2).join(' ').toString()
             };
 
             // Search for newCommand.name in database. If it's there, then update document with newCommand using options = {upsert: true, new: true}
             // If it's not there, then create it
             const result = await CommandModel.findOneAndUpdate(newCommand.name, newCommand, options);
-            result ? console.log(`Successfully created/updated ${result}`) : console.log('Could not add command');
+            logCommand(commandName, result);
 
         } else if (reRemove.test(commandName) && (context.badges.broadcaster || context.mod)) {
 
-            console.log(`* Executed ${commandName} command`);
             const commandToBeRemoved = {
-                name: commandName.split(" ").slice(1).toString()
+                name: commandName.split(' ').slice(1).toString()
             }
 
             // Removes the given command if it exists
             const result = await CommandModel.findOneAndDelete(commandToBeRemoved);
-            result ? console.log(`* Successfully removed ${result}`) : console.log('Command does not exist');
+            logCommand(commandName, result);
+
+        } else if (reSimple.test(commandName)) {
+
+            const command = {
+                name: commandName
+            }
+
+            const result = await CommandModel.findOne(command);
+            if (result) client.say(target, `${result.response}`);
+            logCommand(commandName, result);
 
         } else {
             console.log(`* Unknown command ${commandName}`);
@@ -181,13 +192,14 @@ async function onCommandHandler (target, context, commandName) {
     } catch (err) {
         console.log(err);
     }
+}
 
+const logCommand = (commandName, result) => {
+    console.log(`* Executed ${commandName.toLowerCase()} command`);
+    if (result) { console.log(result); }
 }
 
 // This is necessary to prevent heroku from disconnecting
-
 app.listen(port, () => {
    console.log(`listening on port ${port}`);
 });
-
-// module.exports = app;
