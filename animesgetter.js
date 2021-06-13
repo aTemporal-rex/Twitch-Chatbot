@@ -41,17 +41,13 @@ async function handleData(data) {
     
     // Getting just the media array
     const medias = data.data.Page.media;
-    // console.log(medias);
 
     // Selecting a random anime
     const media = medias[Math.floor(Math.random() * medias.length)].title;
-    // const media = medias[Math.floor(Math.random() * medias.length)];
 
     // Displaying english title if it exists, otherwise displaying romaji title
     media.english ? console.log(`Your next favorite anime is ${media.english}\n`) : console.log(`Your next favorite anime is ${media.romaji}\n`);
     return media.english ? media.english : media.romaji;
-    // return media;
-
 }
 
 async function handleError(error) {

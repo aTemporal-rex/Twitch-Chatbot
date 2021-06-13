@@ -10,6 +10,7 @@
     "express-session": "^1.17.2",
     "graphql": "^15.5.0",
     "handlebars": "^4.7.7",
+    "mongoose": "^5.12.13",
     "node-fetch": "^2.6.1",
     "passport": "^0.4.1",
     "passport-oauth": "^1.0.0",
