@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 const options = {upsert: true, new: true};
 
-const cooldown = 3000;                  // Command cooldown in milliseconds
+const cooldown = 3000;                    // Command cooldown in milliseconds
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
       reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
@@ -21,7 +21,7 @@ const reAnime = /^!anime{1}?$/i,
       reRemove = /^!bremovecommand ![\w]+$/i,
       reSimple = /^![\w]+$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^!baddcommand ![\w]+ [\w\W]*$|^!bremovecommand ![\w]+$|^![\w]+$/i;
-let timePrevCmd = 0,                    // Time at which previous command was used; used for cooldown
+let timePrevCmd = 0,                     // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
 
@@ -194,9 +194,17 @@ async function onCommandHandler (target, context, commandName) {
     }
 }
 
+// Logs the inputted command depending on what type of command it is
 const logCommand = (commandName, result) => {
-    console.log(`* Executed ${commandName.toLowerCase()} command`);
-    if (result) { console.log(result); }
+    if (result) { 
+        console.log(`* Executed ${commandName.toLowerCase()} command`);
+        console.log(result); 
+    } else if (result === null) {
+        console.log(`* ${commandName} command not found`);
+    } else {
+        console.log(`* Executed ${commandName.toLowerCase()} command`);
+    }
+
 }
 
 // This is necessary to prevent heroku from disconnecting
