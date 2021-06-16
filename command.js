@@ -4,7 +4,8 @@ const CommandSchema = new mongoose.Schema({
     name: String,
     response: { type: String, default: '' },
     permission: {type: String, default: 'Everyone' },
-    cooldown: { type: Number, default: 3000 }
+    cooldown: { type: Number, default: 3000 },
+    alias: [String]
 });
 
 mongoose.model('Command', CommandSchema);

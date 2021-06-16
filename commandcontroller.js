@@ -29,8 +29,8 @@ const initCommands = async () => {
 }
 
 const init = async () => {
-    // await CommandModel.deleteMany();
-    // await initCommands();
+     await CommandModel.deleteMany();
+    //  await initCommands();
 }
 
 // init();

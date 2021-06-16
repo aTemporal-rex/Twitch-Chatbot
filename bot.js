@@ -4,23 +4,24 @@ const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
 const CommandModel = require('./command');
-const commandController = require('./commandcontroller');
 const db = require('./db');
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
 const app = express();
-const options = {upsert: true, new: true};
+const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const cooldown = 3000;                    // Command cooldown in milliseconds
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
       reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
       reMangaS = /^!manga[0-9]{1,2}?$/i,  // Regex checks if command !manga is followed by 1 or 2 digits
-      reAdd = /^!baddcommand ![\w]+ [\w\W]*$/i,
-      reRemove = /^!bremovecommand ![\w]+$/i,
       reSimple = /^![\w]+$/i,
-      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^!baddcommand ![\w]+ [\w\W]*$|^!bremovecommand ![\w]+$|^![\w]+$/i;
+      reAdd = /^!baddcommand ![\w]+ [\w\W]*$/i,
+      reDel = /^!bdelcommand ![\w]+$/i,
+      reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
+      reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
+      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
 let timePrevCmd = 0,                     // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
@@ -88,6 +89,8 @@ async function onConnectedHandler (addr, port) {
 
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName) {
+    const ADMIN_PERMISSION = context.badges.broadcaster || context.mod;
+    
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
@@ -153,35 +156,67 @@ async function onCommandHandler (target, context, commandName) {
             }
             client.say(target, `Your next favorite manga is ${media} TehePelo`);
             
-        } else if (reAdd.test(commandName) && (context.badges.broadcaster || context.mod)) {
+        } else if (reAdd.test(commandName) && ADMIN_PERMISSION) {
             
             const newCommand = {
                 name: commandName.split(' ').slice(1, 2).toString(),
                 response: commandName.split(' ').slice(2).join(' ').toString()
             };
 
+            const filter = {
+                name: newCommand.name
+            };
+
             // Search for newCommand.name in database. If it's there, then update document with newCommand using options = {upsert: true, new: true}
             // If it's not there, then create it
-            const result = await CommandModel.findOneAndUpdate(newCommand.name, newCommand, options);
+            const result = await CommandModel.findOneAndUpdate(filter, newCommand, options);
             logCommand(commandName, result);
 
-        } else if (reRemove.test(commandName) && (context.badges.broadcaster || context.mod)) {
+        } else if (reDel.test(commandName) && ADMIN_PERMISSION) {
 
-            const commandToBeRemoved = {
-                name: commandName.split(' ').slice(1).toString()
-            }
+            // filter uses an $or operator to select a document based on name or alias
+            const filter = {
+                $or: [{ name: commandName.split(' ').slice(1).toString() }, { alias: commandName.split(' ').slice(1).toString() }]
+            };
 
             // Removes the given command if it exists
-            const result = await CommandModel.findOneAndDelete(commandToBeRemoved);
+            const result = await CommandModel.findOneAndDelete(filter);
+            logCommand(commandName, result);
+
+        } else if (reAddAlias.test(commandName) && ADMIN_PERMISSION) {
+            
+            const filter = {
+                name: commandName.split(' ').slice(1, 2).toString()
+            };
+
+            const alias = {
+                alias: commandName.split(' ').slice(2).toString()
+            };
+
+            // Finds a command based on its name, then adds the given alias to the alias array
+            const result = await CommandModel.findOneAndUpdate(filter, {$push: alias}, {new: true});
+            logCommand(commandName, result);
+
+        } else if (reDelAlias.test(commandName) && ADMIN_PERMISSION) {
+
+            const filter = {
+                name: commandName.split(' ').slice(1, 2).toString()
+            };
+
+            const alias = {
+                alias: commandName.split(' ').slice(2).toString()
+            };
+
+            const result = await CommandModel.findOneAndUpdate(filter, {$pull: alias}, {new: true});
             logCommand(commandName, result);
 
         } else if (reSimple.test(commandName)) {
+            
+            const filter = {
+                $or: [{ name: commandName }, { alias: commandName }]
+            };
 
-            const command = {
-                name: commandName
-            }
-
-            const result = await CommandModel.findOne(command);
+            const result = await CommandModel.findOne(filter);
             if (result) client.say(target, `${result.response}`);
             logCommand(commandName, result);
 
@@ -204,7 +239,6 @@ const logCommand = (commandName, result) => {
     } else {
         console.log(`* Executed ${commandName.toLowerCase()} command`);
     }
-
 }
 
 // This is necessary to prevent heroku from disconnecting
