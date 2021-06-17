@@ -217,7 +217,6 @@ async function onCommandHandler (target, context, commandName) {
             logCommand(commandName);
             const joke = await getJoke();
 
-            console.log(joke);
             if (joke.status === 200) {
                 // Display joke in chat with the punchline delivered 3 seconds after
                 client.say(target, `${joke.data.setup}`);
@@ -225,6 +224,8 @@ async function onCommandHandler (target, context, commandName) {
 
                 // Display joke to console
                 console.log(`${joke.data.setup} ${joke.data.punchline}`);
+            } else {
+                console.log(`Error, hit joke limit`);
             }
             
         } else if (reSimple.test(commandName)) {
