@@ -12,7 +12,8 @@ const port = process.env.PORT || 3000;
 const app = express();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
-const cooldown = 5000;                    // Command cooldown in milliseconds
+const cooldown = 5000,                    // Command cooldown in milliseconds
+      jokeCooldown = 15000;
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
       reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
@@ -24,7 +25,7 @@ const reAnime = /^!anime{1}?$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!joke$/i
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
-let timePrevCmd = 0,                     // Time at which previous command was used; used for cooldown
+let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore;
 
@@ -97,7 +98,7 @@ async function onCommandHandler (target, context, commandName) {
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
     }
-    
+
     // Manages a global command cooldown
     if (reCheck.test(commandName)) {
         if (timePrevCmd >= (Date.now() - cooldown)) {
@@ -213,14 +214,21 @@ async function onCommandHandler (target, context, commandName) {
             logCommand(commandName, result);
 
         } else if (reJoke.test(commandName)) {
-
+            
+            // Manages cooldown on joke command
+            if (timePrevJoke >= (Date.now() - jokeCooldown)) {
+                console.log('Command is on cooldown.');
+                return;
+            }
+            timePrevJoke = Date.now();
+            
             logCommand(commandName);
             const joke = await getJoke();
 
             if (joke.status === 200) {
                 // Display joke in chat with the punchline delivered 3 seconds after
                 client.say(target, `${joke.data.setup}`);
-                setTimeout(() => { client.say(target, `${joke.data.punchline} 4Head`) }, cooldown);
+                setTimeout(() => { client.say(target, `${joke.data.punchline} 4Head`) }, 5000);
 
                 // Display joke to console
                 console.log(`${joke.data.setup} ${joke.data.punchline}`);
