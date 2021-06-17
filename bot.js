@@ -217,13 +217,16 @@ async function onCommandHandler (target, context, commandName) {
             logCommand(commandName);
             const joke = await getJoke();
 
-            // Display joke in chat with the punchline delivered 3 seconds after
-            client.say(target, `${joke.data.setup}`);
-            setTimeout(() => { client.say(target, `${joke.data.punchline} 4Head`) }, cooldown);
+            console.log(joke);
+            if (joke.status === 200) {
+                // Display joke in chat with the punchline delivered 3 seconds after
+                client.say(target, `${joke.data.setup}`);
+                setTimeout(() => { client.say(target, `${joke.data.punchline} 4Head`) }, cooldown);
 
-            // Display joke to console
-            console.log(`${joke.data.setup} ${joke.data.punchline}`);
-
+                // Display joke to console
+                console.log(`${joke.data.setup} ${joke.data.punchline}`);
+            }
+            
         } else if (reSimple.test(commandName)) {
             
             const filter = {
