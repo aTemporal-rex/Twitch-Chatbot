@@ -4,6 +4,7 @@ const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
 const { getJoke } = require('./jokes');
+const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const CommandModel = require('./command');
 const db = require('./db');
 require('dotenv').config();
@@ -13,7 +14,7 @@ const app = express();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const cooldown = 5000,                    // Command cooldown in milliseconds
-      jokeCooldown = 15000;
+      jokeCooldown = 60000;
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
       reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
@@ -23,11 +24,12 @@ const reAnime = /^!anime{1}?$/i,
       reDel = /^!bdelcommand ![\w]+$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
-      reJoke = /^!joke$/i
+      reJoke = /^!joke$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
 let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
-    averageScore;
+    averageScore,
+    sneeze = false;
 
 
 
@@ -68,9 +70,11 @@ const getPageCountAvgScore = async (mediaType) => {
 
 // Called every time a message comes in
 async function onMessageHandler (target, context, msg, self) {
-    if (self) { return; } // Ignores messages from the bot
+    if (self) { return; } // Ignores messages from the bot    
 
-    // console.log(context.badges.broadcaster);
+    // If bot hasn't sneezed, it attempts to sneeze with a 2% chance per message
+    if (sneeze === false) { sneeze = initSneeze(target, client); }
+    if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
     // Check if msg is a command
     if (msg.startsWith('!')) {
@@ -99,14 +103,17 @@ async function onCommandHandler (target, context, commandName) {
         await getPageCounts();
     }
 
+
+
     // Manages a global command cooldown
-    if (reCheck.test(commandName)) {
-        if (timePrevCmd >= (Date.now() - cooldown)) {
-            console.log('Command is on cooldown.');
-            return; 
-        }
-        timePrevCmd = Date.now();
-    }
+    if (onCooldown(commandName, ADMIN_PERMISSION)) { return; }
+    // if (reCheck.test(commandName)) {
+    //     if (timePrevCmd >= (Date.now() - cooldown)) {
+    //         console.log('Command is on cooldown.');
+    //         return; 
+    //     }
+    //     timePrevCmd = Date.now();
+    // }
 
     // Checks if command matches regex for !anime{2 or 1 digits number} command
     // If it matches then it removes non-digits and assigns the digits to average score
@@ -214,14 +221,7 @@ async function onCommandHandler (target, context, commandName) {
             logCommand(commandName, result);
 
         } else if (reJoke.test(commandName)) {
-            
-            // Manages cooldown on joke command
-            if (timePrevJoke >= (Date.now() - jokeCooldown)) {
-                console.log('Command is on cooldown.');
-                return;
-            }
-            timePrevJoke = Date.now();
-            
+
             logCommand(commandName);
             const joke = await getJoke();
 
@@ -252,6 +252,26 @@ async function onCommandHandler (target, context, commandName) {
 
     } catch (err) {
         console.log(err);
+    }
+}
+
+const onCooldown = (commandName, context) => {
+
+    // Manages joke cooldown, admin's aren't restricted by cooldown
+    if (reJoke.test(commandName) && !context) {
+        if (timePrevJoke >= (Date.now() - jokeCooldown)) {
+            console.log('Command is on cooldown.');
+            return true;
+        }
+        timePrevJoke = Date.now();
+    }
+    // Manages global cooldown
+    else if (reCheck.test(commandName)) {
+        if (timePrevCmd >= (Date.now() - cooldown)) {
+            console.log('Command is on cooldown.');
+            return true;
+        }
+        timePrevCmd = Date.now();
     }
 }
 
