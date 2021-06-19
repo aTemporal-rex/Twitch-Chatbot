@@ -1,5 +1,6 @@
 const tmi = require('tmi.js');
 const express = require('express');
+const helmet = require("helmet");
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
@@ -12,6 +13,8 @@ require('dotenv').config();
 
 const port = process.env.PORT || 3000;
 const app = express();
+app.use(helmet());
+
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const queue = [];
@@ -29,7 +32,7 @@ const reAnime = /^!anime{1}?$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!joke$/i,
-      reJoin = /^!join$/i,
+      reJoin = /^!bjoin$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
 let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
@@ -241,7 +244,12 @@ async function onCommandHandler (target, context, commandName) {
             }
             
         } else if (reJoin.test(commandName)) {
-            queue.push(context.username);
+            queue.push(context['display-name']);
+
+        } else if (reQueue.test(commandName)) {
+            client.say(target, `Queue order: ${queue}`);
+            console.log(queue);
+        } else if (reClear.test(commandName)) {
 
         } else if (reSimple.test(commandName)) {
             
