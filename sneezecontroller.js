@@ -91,6 +91,7 @@ function getSneezeData () {
 
     // If more than 1 reply is available it will pick a random one
     const reply = Array.isArray(replies) ? replies[Math.floor(Math.random() * replies.length)] : replies;
+    console.log(sneezeData);
 
     // Returns an array containing the responses, reply, and language
     return {'response': responses, 'reply': reply, 'language': language, 'regex': regex};

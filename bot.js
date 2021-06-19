@@ -5,7 +5,7 @@ const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
 const { getJoke } = require('./jokes');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
-const { initEmotes, displayEmote, clearEmoteChecker } = require('./emotecontroller');
+const { initEmotes, onEmoteHandler } = require('./emotecontroller');
 const CommandModel = require('./command');
 const db = require('./db');
 require('dotenv').config();
@@ -14,11 +14,11 @@ const port = process.env.PORT || 3000;
 const app = express();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
+const queue = [];
 const emoticons = [];
-let emoteCounter = 0;
 
 const cooldown = 5000,                    // Command cooldown in milliseconds
-      jokeCooldown = 60000;
+      jokeCooldown = 30000;
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
       reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
@@ -29,6 +29,7 @@ const reAnime = /^!anime{1}?$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!joke$/i,
+      reJoin = /^!join$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
 let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
@@ -41,6 +42,9 @@ let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous
 const opts = {
     options: {
         clientId: process.env.CLIENT_ID
+    },
+    connection: {
+        reconnect: true
     },
     identity: {
         username: process.env.BOT_USERNAME,
@@ -76,29 +80,8 @@ const getPageCountAvgScore = async (mediaType) => {
 async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
-    // When there are 3 matches of the same emote in the past 5 messages, display that emote
-    // if (emoticons.some(emoticon => msg.includes(emoticon))) {
-    //     console.log("Match using '" + msg + "'");
-    // } else {
-    //     console.log("No match using '" + msg + "'");
-    // }
-
-    // if (emoteCounter < 5) {
-    //     displayEmote(target, msg, client, emoticons);
-    //     ++emoteCounter;
-    // } else {
-    //     clearEmoteChecker();
-    //     emoteCounter = 0;
-    // }
-    // if (emoteCounter < 5) {
-    //     emoticons.findIndex(emoticon => msg.includes(emoticon));
-    //     ++emoteCounter;
-    // }
-    // console.log(emoticons.findIndex(emoticon => msg.includes(emoticon)));
-
-    // if (emoticons.findIndex(emoticon => msg.includes(emoticon)) != -1) {
-
-    // }
+    // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
+    onEmoteHandler(target, msg, client, emoticons);
 
     // If bot hasn't sneezed, it attempts to sneeze with a 2% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
@@ -113,7 +96,7 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    // await initEmotes(emoticons);
+    await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
@@ -126,24 +109,15 @@ async function onConnectedHandler (addr, port) {
 
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName) {
-    const ADMIN_PERMISSION = context.badges.broadcaster || context.mod;
+    const ADMIN_PERMISSION = context.mod || process.env.TWITCH_NAME || context.badges.broadcaster;
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
     }
 
-
-
     // Manages a global command cooldown
     if (onCooldown(commandName, ADMIN_PERMISSION)) { return; }
-    // if (reCheck.test(commandName)) {
-    //     if (timePrevCmd >= (Date.now() - cooldown)) {
-    //         console.log('Command is on cooldown.');
-    //         return; 
-    //     }
-    //     timePrevCmd = Date.now();
-    // }
 
     // Checks if command matches regex for !anime{2 or 1 digits number} command
     // If it matches then it removes non-digits and assigns the digits to average score
@@ -266,6 +240,9 @@ async function onCommandHandler (target, context, commandName) {
                 console.log(`Error, hit joke limit`);
             }
             
+        } else if (reJoin.test(commandName)) {
+            queue.push(context.username);
+
         } else if (reSimple.test(commandName)) {
             
             const filter = {
