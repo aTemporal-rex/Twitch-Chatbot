@@ -5,6 +5,7 @@ const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
 const { getJoke } = require('./jokes');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
+const { initEmotes, displayEmote, clearEmoteChecker } = require('./emotecontroller');
 const CommandModel = require('./command');
 const db = require('./db');
 require('dotenv').config();
@@ -12,6 +13,9 @@ require('dotenv').config();
 const port = process.env.PORT || 3000;
 const app = express();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
+
+const emoticons = [];
+let emoteCounter = 0;
 
 const cooldown = 5000,                    // Command cooldown in milliseconds
       jokeCooldown = 60000;
@@ -70,7 +74,31 @@ const getPageCountAvgScore = async (mediaType) => {
 
 // Called every time a message comes in
 async function onMessageHandler (target, context, msg, self) {
-    if (self) { return; } // Ignores messages from the bot    
+    if (self) { return; } // Ignores messages from the bot
+
+    // When there are 3 matches of the same emote in the past 5 messages, display that emote
+    // if (emoticons.some(emoticon => msg.includes(emoticon))) {
+    //     console.log("Match using '" + msg + "'");
+    // } else {
+    //     console.log("No match using '" + msg + "'");
+    // }
+
+    if (emoteCounter < 5) {
+        displayEmote(target, msg, client, emoticons);
+        ++emoteCounter;
+    } else {
+        clearEmoteChecker();
+        emoteCounter = 0;
+    }
+    // if (emoteCounter < 5) {
+    //     emoticons.findIndex(emoticon => msg.includes(emoticon));
+    //     ++emoteCounter;
+    // }
+    // console.log(emoticons.findIndex(emoticon => msg.includes(emoticon)));
+
+    // if (emoticons.findIndex(emoticon => msg.includes(emoticon)) != -1) {
+
+    // }
 
     // If bot hasn't sneezed, it attempts to sneeze with a 2% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
@@ -85,6 +113,8 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
+    await initEmotes(emoticons);
+
     console.log(`* Connected to ${addr}:${port}`);
 
     // Change client color
