@@ -43,7 +43,8 @@ module.exports.displayEmote = (target, msg, client, emoticons) => {
 
     
     emoticonChecker.forEach(emoticon => { counts[emoticon] = (counts[emoticon] || 0) + 1; });
-    const emoteHype = Object.keys(counts).find(emoticon => counts[emoticon] >= 3);
+    const emoteHype = Object.keys(counts).find(emoticon => counts[emoticon] >= 3 && counts[emoticon] != undefined);
+    console.log(emoteHype);
     if (emoteHype != undefined) { client.say(target, emoteHype); }
 }
 

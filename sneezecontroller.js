@@ -54,8 +54,6 @@ const initSneeze = (target, client) => {
     if (Math.random() <= CHANCE) {
         sneezeData = getSneezeData();
 
-        console.log(sneezeData);
-
         switch (sneezeData.language) {
             case 'English':
                 client.say(target, `/me *aaAACHOOOO*`);
