@@ -2,7 +2,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const emoticonChecker = [];
-const NUM_MSG_CHECK = 5;
+const NUM_MSG_CHECK = 6;
 let msgCounter = 0;
 
 const getFFZData = async (emoticons) => {
@@ -26,10 +26,16 @@ const getBTTVData = async (emoticons) => {
     });
 }
 
+const getGlobalEmotes = async () => {
+    // const data = await axios.get(`https://api.twitch.tv/kraken/chat/emoticon_images/?emotesets=${process.env.TWITCH_ID}`);
+    console.log(data);
+
+}
 
 async function initEmotes (emoticons) {
     await getFFZData(emoticons);
     await getBTTVData(emoticons);
+    // await getGlobalEmotes(emoticons);
 }
 
 function onEmoteHandler (target, msg, client, emoticons) {

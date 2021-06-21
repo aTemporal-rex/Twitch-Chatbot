@@ -7,6 +7,7 @@ const { getPageCount } = require('./pagegetter');
 const { getJoke } = require('./jokes');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
+const { onQueueHandler } = require('./queuecontroller');
 const CommandModel = require('./command');
 const db = require('./db');
 require('dotenv').config();
@@ -17,7 +18,6 @@ app.use(helmet());
 
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
-const queue = [];
 const emoticons = [];
 
 const cooldown = 5000,                    // Command cooldown in milliseconds
@@ -32,7 +32,7 @@ const reAnime = /^!anime{1}?$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!joke$/i,
-      reJoin = /^!bjoin$/i,
+      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext\d{0,2}|^!bcurrent$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
 let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
@@ -243,15 +243,15 @@ async function onCommandHandler (target, context, commandName) {
                 console.log(`Error, hit joke limit`);
             }
             
-        } else if (reJoin.test(commandName)) {
-            queue.push(context['display-name']);
+        } 
+        // else if (reQueue.test(commandName)) {
 
-        } else if (reQueue.test(commandName)) {
-            client.say(target, `Queue order: ${queue}`);
-            console.log(queue);
-        } else if (reClear.test(commandName)) {
+        //     logCommand(commandName);
+        //     // Handles all queue functionality
+        //     onQueueHandler (target, context, commandName, client);
 
-        } else if (reSimple.test(commandName)) {
+        // } 
+        else if (reSimple.test(commandName)) {
             
             const filter = {
                 $or: [{ name: commandName }, { alias: commandName }]
@@ -272,6 +272,7 @@ async function onCommandHandler (target, context, commandName) {
 
 const onCooldown = (commandName, context) => {
 
+    // if (reQueue.test(commandName)) { return; }
     // Manages joke cooldown, admin's aren't restricted by cooldown
     if (reJoke.test(commandName) && !context) {
         if (timePrevJoke >= (Date.now() - jokeCooldown)) {
