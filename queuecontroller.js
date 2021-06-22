@@ -1,4 +1,5 @@
-const reNext = /^!bnext ?\d{0,2}$/i;
+const reNext = /^!bnext ?\d{0,2}$/i, reStart = /^!bstart$/i, reEnd = /^!bend$/i,
+      reClear = /^!bclear$/i, reClose = /^!bclose$/i;
 
 const queue = [],   // Array containing the people coming up in the queue
       current = []; // Array containing the people currently up in the queue
@@ -6,27 +7,36 @@ const queue = [],   // Array containing the people coming up in the queue
 let queueOpen = false;
 
 async function onQueueHandler (target, context, commandName, client) {
-    const ADMIN_PERMISSION = context.mod || process.env.TWITCH_NAME || context.badges.broadcaster;
+    const ADMIN_PERMISSION = context;
     const user = context['display-name'];
 
     // Commands requiring ADMIN_PERMISSION
     if (ADMIN_PERMISSION) {
         switch (commandName) {
             case '!bstart':
+                onDisplayQueue(target, client, commandName, context);
                 queueOpen = true;
-                console.log('Queue opened');
-                break;
+                return;
             case '!bclose':
+                onDisplayQueue(target, client, commandName, context);
                 queueOpen = false;
-                console.log('Queue closed');
-                break;
+                return;
             case '!bend':
+                onDisplayQueue(target, client, commandName, context);
+                onClearQueue(commandName);
                 queueOpen = false;
-                onClearQueue();
-                break;
+                return;
             case '!bclear':
-                onClearQueue();
-                break;
+                onDisplayQueue(target, client, commandName, context);
+                onClearQueue(commandName);
+                return;
+        }
+
+        if (reNext.test(commandName)) {
+            const quantity = commandName.replace(/\D/g, '');
+            quantity ? onNextQueue(quantity) : onNextQueue();
+            onDisplayQueue(target, client, commandName, context);
+            return;
         }
     }
 
@@ -47,15 +57,37 @@ async function onQueueHandler (target, context, commandName, client) {
             onDisplayQueue(target, client, commandName);
             break;
     }
-    
-    if (reNext.test(commandName)) {
-        const quantity = commandName.replace(/\D/g, '');
-        console.log(quantity);
-        quantity ? onNextQueue(quantity) : onNextQueue();
-    }
 }
 
-async function onDisplayQueue(target, client, commandName) {
+async function onDisplayQueue(target, client, commandName, context) {
+    const ADMIN_PERMISSION = context;
+
+    if (ADMIN_PERMISSION) {
+        switch (true) {
+            case reStart.test(commandName):
+                queueOpen ? client.say(target, 'Queue is already open') : client.say(target, 'Queue is now open, type !bjoin to join');
+                queueOpen ? console.log('Queue is already open') : console.log('Queue is now open');
+                break;
+            case reClose.test(commandName):
+                queueOpen ? client.say(target, 'Queue is now closed') : client.say(target, 'Queue is already closed');
+                queueOpen ? console.log('Queue is now closed') : console.log('Queue is already closed');
+                break;
+            case reEnd.test(commandName):
+                queueOpen ? client.say(target, 'Queue is now terminated. Go get a healthy snack, you\'ve earned it AAUGH') : client.say(target, 'There is no active queue');
+                queueOpen ? console.log('Queue is now terminated') : console.log('There is no active queue');
+                break;
+            case reClear.test(commandName):
+                queue.length > 0 ? client.say(target, 'Queue has been cleared') : client.say(target, 'Queue is already empty');
+                queue.length > 0 ? console.log('Queue has been cleared') : console.log('Queue is already empty');
+                break;
+            case reNext.test(commandName):
+                current.length > 0 ? client.say(target, `Next up: ${current.join(', ')}`) : client.say(target, 'Queue is empty');
+                current.length > 0 ? console.log(`Next up: ${current}`) : console.log('Queue is empty');
+                break;
+        }
+    }
+
+
     switch (commandName) {
         case '!bqueue':
             queue.length > 0 ? client.say(target, `Queue order: ${queue.join(', ')}`) : client.say(target, 'Queue is empty');
@@ -83,13 +115,10 @@ async function onNextQueue (quantity = 1) {
     if (current.length > 0) { current.length = 0; }
 
     let i = 0;
-    console.log(queue);
     while ( i < quantity ) {
-        current.push(queue.shift());
+        if (queue.length > 0) { current.push(queue.shift()); }
         ++i;
     }
-
-    console.log(current);
 }
 
 async function onClearQueue (commandName) {

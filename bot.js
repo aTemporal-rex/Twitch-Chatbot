@@ -32,7 +32,7 @@ const reAnime = /^!anime{1}?$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
-      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext\d{0,2}|^!bend$|^!bcurrent$/i,
+      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
 let cmdOnCooldown = false, jokeOnCooldown = false, // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
@@ -110,7 +110,8 @@ async function onConnectedHandler (addr, port) {
 
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName) {
-    const ADMIN_PERMISSION = context.mod || process.env.TWITCH_NAME || context.badges.broadcaster;
+    // If admin, sets value to true, otherwise it's false
+    const ADMIN_PERMISSION = context.mod === true ? true : context.badges.broadcaster === '1' ? true : context.username === process.env.TWITCH_NAME ? true : false;
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -236,7 +237,7 @@ async function onCommandHandler (target, context, commandName) {
             logCommand(commandName);
             
             // Handles all queue functionality
-            onQueueHandler (target, context, commandName, client);
+            onQueueHandler (target, ADMIN_PERMISSION, commandName, client);
 
         } 
         else if (reSimple.test(commandName)) {
