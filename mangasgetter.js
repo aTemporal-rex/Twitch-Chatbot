@@ -46,7 +46,7 @@ async function handleData(data) {
     const media = medias[Math.floor(Math.random() * medias.length)].title;
 
     // Displaying english title if it exists, otherwise displaying romaji title
-    media.english ? console.log(`Your next favorite manga is ${media.english}\n`) : console.log(`Your next favorite manga is ${media.romaji}\n`);
+    media.english ? console.log(`Your next favorite manga is ${media.english}`) : console.log(`Your next favorite manga is ${media.romaji}`);
     return media.english ? media.english : media.romaji;
 }
 
