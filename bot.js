@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
-const { getJoke, tellJoke } = require('./jokes');
+const { tellJoke } = require('./jokes');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
 const { onQueueHandler } = require('./queuecontroller');
@@ -20,7 +20,7 @@ const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const emoticons = [];
 
-const cooldown = 4000,               // Command cooldown in milliseconds
+const cooldown = 4000, // Command cooldown in milliseconds
       jokeCooldown = 45000;
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
@@ -34,7 +34,7 @@ const reAnime = /^!anime{1}?$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext\d{0,2}|^!bend$|^!bcurrent$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
-let cmdOnCooldown = false, jokeOnCooldown = false,                 // Time at which previous command was used; used for cooldown
+let cmdOnCooldown = false, jokeOnCooldown = false, // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore,
     sneeze = false;
@@ -97,7 +97,7 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    // await initEmotes(emoticons);
+    await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
@@ -259,8 +259,10 @@ async function onCommandHandler (target, context, commandName) {
 }
 
 const onCooldown = (commandName, context) => {
+    const ADMIN_PERMISSION = context;
 
-    if (reQueue.test(commandName)) { return; }
+    if (ADMIN_PERMISSION) { return; } // If admin, ignore cooldown
+    if (reQueue.test(commandName)) { return; } // Ignore cooldown for queue usage
 
     // Manages joke cooldown, and a global cooldown
     if (reJoke.test(commandName)) {

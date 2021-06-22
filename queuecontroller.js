@@ -46,7 +46,6 @@ async function onQueueHandler (target, context, commandName, client) {
         case '!bcurrent':
             onDisplayQueue(target, client, commandName);
             break;
-        
     }
     
     if (reNext.test(commandName)) {
