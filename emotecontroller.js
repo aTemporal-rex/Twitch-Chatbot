@@ -2,7 +2,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const emoticonChecker = [];
-const NUM_MSG_CHECK = 6;
+const NUM_MSG_CHECK = 8;
 let msgCounter = 0;
 
 const getFFZData = async (emoticons) => {
@@ -26,16 +26,21 @@ const getBTTVData = async (emoticons) => {
     });
 }
 
+// ** Not currently being used
 const getGlobalEmotes = async () => {
-    // const data = await axios.get(`https://api.twitch.tv/kraken/chat/emoticon_images/?emotesets=${process.env.TWITCH_ID}`);
+    const data = await axios.get(`https://api.twitch.tv/helix/chat/emotes/global`);
     console.log(data);
+}
+
+// ** Not currently being used
+const getChannelEmotes = async () => {
+    const data = await axios.get(`https://api.twitch.tv/helix/chat/emotes?broadcaster_id=${process.env.TWITCH_ID}`)
 
 }
 
 async function initEmotes (emoticons) {
     await getFFZData(emoticons);
     await getBTTVData(emoticons);
-    // await getGlobalEmotes(emoticons);
 }
 
 function onEmoteHandler (target, msg, client, emoticons) {
@@ -51,14 +56,14 @@ function onEmoteHandler (target, msg, client, emoticons) {
         // Add each emote to the counts object and their number of occurrences
         emoticonChecker.forEach(emoticon => { emoteCount[emoticon] = (emoteCount[emoticon] || 0) + 1; });
 
-        // Checking if an emote reaches over 3 occurrences in the past NUM_MSG_TO_CHECK msgs
+        // Checking if an emote reaches over 3 occurrences in the past NUM_MSG_CHECK msgs
         const emoteHype = Object.keys(emoteCount).find(emoticon => emoteCount[emoticon] >= 3 && emoticon != 'undefined');
 
         ++msgCounter;
         if (emoteHype) {
             client.say(target, emoteHype);
             clearEmoteChecker();
-        } else if (emoticonChecker.length === 5) {
+        } else if (emoticonChecker.length === NUM_MSG_CHECK) {
             clearEmoteChecker();
         }
 

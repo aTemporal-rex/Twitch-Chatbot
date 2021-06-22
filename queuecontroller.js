@@ -1,5 +1,4 @@
-const reNext = /^!bnext\d{0,2}/i,
-      reStart = /^!bstart$/i;
+const reNext = /^!bnext ?\d{0,2}$/i;
 
 const queue = [],   // Array containing the people coming up in the queue
       current = []; // Array containing the people currently up in the queue
@@ -7,39 +6,66 @@ const queue = [],   // Array containing the people coming up in the queue
 let queueOpen = false;
 
 async function onQueueHandler (target, context, commandName, client) {
-    
-    if (reStart.test(commandName) && (context.mod || context.badges.broadcaster)) { queueOpen = true; } // If command was !bstart, start the queue
-    if (queueOpen === false) { return; } // If queue hasn't been started, then return
-
+    const ADMIN_PERMISSION = context.mod || process.env.TWITCH_NAME || context.badges.broadcaster;
     const user = context['display-name'];
 
+    // Commands requiring ADMIN_PERMISSION
+    if (ADMIN_PERMISSION) {
+        switch (commandName) {
+            case '!bstart':
+                queueOpen = true;
+                console.log('Queue opened');
+                break;
+            case '!bclose':
+                queueOpen = false;
+                console.log('Queue closed');
+                break;
+            case '!bend':
+                queueOpen = false;
+                onClearQueue();
+                break;
+            case '!bclear':
+                onClearQueue();
+                break;
+        }
+    }
+
+    // Check if queue has been opened before continuing
+    if (queueOpen === false) { 
+        console.log('Queue is currently closed'); 
+        return; 
+    }
+
     switch (commandName) {
-        case '!bclose':
-            queueOpen = false;
-            break;
-        case '!bend':
-            onClearQueue();
-            queueOpen = false;
-            break;
         case '!bjoin':
             onJoinQueue(user);
             break;
         case '!bqueue':
-            client.say(target, `Queue order: ${queue.join(', ')}`);
-            console.log(`Queue order: ${queue}`);
+            onDisplayQueue(target, client, commandName);
             break;
         case '!bcurrent':
-            client.say(target, `Currently up: ${current.join(', ')}`);
+            onDisplayQueue(target, client, commandName);
             break;
-        case '!bclear':
-            onClearQueue();
-            break;
+        
     }
     
     if (reNext.test(commandName)) {
         const quantity = commandName.replace(/\D/g, '');
         console.log(quantity);
         quantity ? onNextQueue(quantity) : onNextQueue();
+    }
+}
+
+async function onDisplayQueue(target, client, commandName) {
+    switch (commandName) {
+        case '!bqueue':
+            queue.length > 0 ? client.say(target, `Queue order: ${queue.join(', ')}`) : client.say(target, 'Queue is empty');
+            queue.length > 0 ? console.log(`Queue order: ${queue}`) : console.log('Queue is empty');
+            break;
+        case '!bcurrent':
+            current.length > 0 ? client.say(target, `Currently up: ${current.join(', ')}`) : client.say(target, 'No current players');
+            current.length > 0 ? console.log(`Current order: ${current}`) : console.log('No current players');
+            break;
     }
 }
 
@@ -52,7 +78,6 @@ async function onJoinQueue (user) {
     } else {
         console.log(`${user} already in queue`);
     }
-    
 }
 
 async function onNextQueue (quantity = 1) {
@@ -68,9 +93,10 @@ async function onNextQueue (quantity = 1) {
     console.log(current);
 }
 
-async function onClearQueue () {
+async function onClearQueue (commandName) {
     queue.length = 0;
     current.length = 0;
+    commandName === '!bclear' ? console.log('Queue has been cleared') : console.log('Queue has been closed');
 }
 
 module.exports = {

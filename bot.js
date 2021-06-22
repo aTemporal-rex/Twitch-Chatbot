@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
-const { getJoke } = require('./jokes');
+const { getJoke, tellJoke } = require('./jokes');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
 const { onQueueHandler } = require('./queuecontroller');
@@ -20,26 +20,24 @@ const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const emoticons = [];
 
-const cooldown = 5000,                    // Command cooldown in milliseconds
-      jokeCooldown = 30000;
+const cooldown = 4000,               // Command cooldown in milliseconds
+      jokeCooldown = 45000;
 const reAnime = /^!anime{1}?$/i,
       reManga = /^!manga{1}?$/i,
-      reAnimeS = /^!anime[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
-      reMangaS = /^!manga[0-9]{1,2}?$/i,  // Regex checks if command !manga is followed by 1 or 2 digits
+      reAnimeS = /^!anime ?[0-9]{1,2}?$/i,  // Regex checks if command !anime is followed by 1 or 2 digits
+      reMangaS = /^!manga ?[0-9]{1,2}?$/i,  // Regex checks if command !manga is followed by 1 or 2 digits
       reSimple = /^![\w]+$/i,
       reAdd = /^!baddcommand ![\w]+ [\w\W]*$/i,
       reDel = /^!bdelcommand ![\w]+$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
-      reJoke = /^!joke$/i,
-      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext\d{0,2}|^!bcurrent$/i,
-      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime[0-9]{1,2}?$|^!manga[0-9]{1,2}?$|^![\w]+$/i;
-let timePrevCmd = 0, timePrevJoke = 0,                 // Time at which previous command was used; used for cooldown
+      reJoke = /^!jokes?$|^!dadjokes?$/i,
+      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext\d{0,2}|^!bend$|^!bcurrent$/i,
+      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
+let cmdOnCooldown = false, jokeOnCooldown = false,                 // Time at which previous command was used; used for cooldown
     animePageCount, mangaPageCount, avgScorePageCount,
     averageScore,
     sneeze = false;
-
-
 
 // Define configuration options
 const opts = {
@@ -86,7 +84,7 @@ async function onMessageHandler (target, context, msg, self) {
     // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
     onEmoteHandler(target, msg, client, emoticons);
 
-    // If bot hasn't sneezed, it attempts to sneeze with a 2% chance per message
+    // If bot hasn't sneezed, it attempts to sneeze with a 3% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
     if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
@@ -99,7 +97,7 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    await initEmotes(emoticons);
+    // await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
@@ -119,7 +117,7 @@ async function onCommandHandler (target, context, commandName) {
         await getPageCounts();
     }
 
-    // Manages a global command cooldown
+    // If given command is on cooldown it will return
     if (onCooldown(commandName, ADMIN_PERMISSION)) { return; }
 
     // Checks if command matches regex for !anime{2 or 1 digits number} command
@@ -230,27 +228,17 @@ async function onCommandHandler (target, context, commandName) {
         } else if (reJoke.test(commandName)) {
 
             logCommand(commandName);
-            const joke = await getJoke();
-
-            if (joke.status === 200) {
-                // Display joke in chat with the punchline delivered 3 seconds after
-                client.say(target, `${joke.data.setup}`);
-                setTimeout(() => { client.say(target, `${joke.data.punchline} 4Head`) }, 5000);
-
-                // Display joke to console
-                console.log(`${joke.data.setup} ${joke.data.punchline}`);
-            } else {
-                console.log(`Error, hit joke limit`);
-            }
+            await tellJoke(target, client, commandName);
             
         } 
-        // else if (reQueue.test(commandName)) {
+        else if (reQueue.test(commandName)) {
 
-        //     logCommand(commandName);
-        //     // Handles all queue functionality
-        //     onQueueHandler (target, context, commandName, client);
+            logCommand(commandName);
+            
+            // Handles all queue functionality
+            onQueueHandler (target, context, commandName, client);
 
-        // } 
+        } 
         else if (reSimple.test(commandName)) {
             
             const filter = {
@@ -272,22 +260,25 @@ async function onCommandHandler (target, context, commandName) {
 
 const onCooldown = (commandName, context) => {
 
-    // if (reQueue.test(commandName)) { return; }
-    // Manages joke cooldown, admin's aren't restricted by cooldown
-    if (reJoke.test(commandName) && !context) {
-        if (timePrevJoke >= (Date.now() - jokeCooldown)) {
-            console.log('Command is on cooldown.');
+    if (reQueue.test(commandName)) { return; }
+
+    // Manages joke cooldown, and a global cooldown
+    if (reJoke.test(commandName)) {
+        if (jokeOnCooldown) {
+            console.log('Command is on cooldown');
             return true;
+        } else {
+            jokeOnCooldown = true;
+            setTimeout(() => { jokeOnCooldown = false; }, jokeCooldown);
         }
-        timePrevJoke = Date.now();
-    }
-    // Manages global cooldown
-    else if (reCheck.test(commandName)) {
-        if (timePrevCmd >= (Date.now() - cooldown)) {
-            console.log('Command is on cooldown.');
+    } else if (reCheck.test(commandName)) {
+        if (cmdOnCooldown) {
+            console.log('Command is on cooldown');
             return true;
+        } else {
+            cmdOnCooldown = true;
+            setTimeout(() => { cmdOnCooldown = false; }, cooldown);
         }
-        timePrevCmd = Date.now();
     }
 }
 

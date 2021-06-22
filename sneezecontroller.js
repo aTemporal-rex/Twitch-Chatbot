@@ -1,5 +1,5 @@
 const TIME_BEFORE_ANGY = 20000,
-      CHANCE = 0.02; // % chance of sneeze happening
+      CHANCE = 0.03; // % chance of sneeze happening
 
 let timePrevSneeze = 0,
     sneezeData;
