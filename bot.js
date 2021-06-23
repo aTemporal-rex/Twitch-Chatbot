@@ -61,7 +61,7 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    // await initEmotes(emoticons);
+    await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
