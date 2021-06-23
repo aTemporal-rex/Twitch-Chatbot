@@ -19,7 +19,7 @@ const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
-      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$/i,
+      reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
 let cmdOnCooldown = false, jokeOnCooldown = false, // Boolean to check if command is on cooldown
     animePageCount, mangaPageCount, avgScorePageCount, 
@@ -150,7 +150,7 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName);
             
             // Handles all queue functionality
-            onQueueHandler (target, context, commandName, client);
+            onQueueHandler (target, context, commandName.toLowerCase(), client);
 
         } 
         else if (reSimple.test(commandName)) {
