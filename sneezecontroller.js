@@ -1,8 +1,9 @@
 const TIME_BEFORE_ANGY = 20000,
-      CHANCE = 0.03; // % chance of sneeze happening
+      CHANCE = 0.03, // % chance of sneeze happening
+      responseGiven = []; // Keeps track of if a response was given for each sneeze
 
-let timePrevSneeze = 0,
-    sneezeData;
+let sneezeData,
+    botAngy = false; // Checks if bot got angry
 
 
 const sneezeObject = {
@@ -50,30 +51,43 @@ const sneezeObject = {
 };    
 
 const initSneeze = (target, client) => {
-    // Every 10 minutes there is a 25% chance for the bot to sneeze in the given language
+    // responseGiven = false;
+    // Every 10 minutes there is a 3% chance for the bot to sneeze in the given language
     if (Math.random() <= CHANCE) {
         sneezeData = getSneezeData();
 
         switch (sneezeData.language) {
             case 'English':
                 client.say(target, `/me *aaAACHOOOO*`);
-                return true;
+                break;
             case 'French':
                 client.say(target, `/me *aaAATCHUMM*`);
-                return true;
+                break;
             case 'German':
                 client.say(target, `/me *haAATSCHII*`);
-                return true;
+                break;
             case 'Spanish':
                 client.say(target, `/me *aaAACHÚÚÚÚ*`);
-                return true;
+                break;
             case 'Swedish':
                 client.say(target, `/me *aaAATJOOOO*`);
-                return true;
+                break;
             case 'Italian':
                 client.say(target, `/me *aaAACCIÙÙÙ*`);
-                return true;
+                break;
         }
+
+        setTimeout(function () {
+            if (responseGiven.shift() === undefined) {
+                console.log('test');
+                // Check if response is array and pick a random response if it is
+                const response = Array.isArray(sneezeData.response) ? sneezeData.response[Math.floor(Math.random() * sneezeData.response.length)] : sneezeData.response;
+                client.say(target, `I SNEEZED MAYBE ${TIME_BEFORE_ANGY/1000} SECONDS AGO AND NO ONE EVEN SAID ${response}!! BunnyRage`);
+                botAngy = true;
+            }
+        }, TIME_BEFORE_ANGY);
+
+        return true;
     }
 }
 
@@ -98,26 +112,23 @@ function getSneezeData () {
 };
 
 function onSneezeHandler (target, msg, client) {
-    if (timePrevSneeze === 0) { timePrevSneeze = Date.now(); }
+    // If bot got angry, sets botAngy to false and returns false to sneeze to handle result of this sneeze
+    if (botAngy === true) { return setSneezeDefaults(); }
 
-    // Check to see if someone replied to bunny senpai's sneeze
+    // If appropriate response is given, pushes true to responseGiven array to handle the result of this sneeze
+    // Returns false to say that sneeze has been resolved
     if (sneezeData.regex.test(msg.trim())) {
-
         client.say(target, `${sneezeData.reply}`);
-        timePrevSneeze = 0;
+        responseGiven.push(true); 
         return false;
-
-    } else if (timePrevSneeze <= (Date.now() - TIME_BEFORE_ANGY)) {
-
-        // Check if response is array and pick a random response if it is
-        const response = Array.isArray(sneezeData.response) ? sneezeData.response[Math.floor(Math.random() * sneezeData.response.length)] : sneezeData.response;
-        client.say(target, `I SNEEZED MAYBE ${TIME_BEFORE_ANGY/1000} SECONDS AGO AND NO ONE EVEN SAID ${response.toUpperCase()}!! BunnyRage`);
-        timePrevSneeze = 0;
-        return false;
-
+    } else {
+        return true; 
     }
+}
 
-    return true;
+function setSneezeDefaults () {
+    botAngy = false;
+    return false;
 }
 
 module.exports = {

@@ -10,7 +10,8 @@ require('dotenv').config();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const cooldown = 4000, // Command cooldown in milliseconds
-      jokeCooldown = 45000;
+      jokeCooldown = 40000;
+
 const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
       reGreater = /^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i,  // Regex checks if command !anime or !manga is followed by 1 or 2 digits
       reSimple = /^![\w]+$/i,
@@ -21,6 +22,7 @@ const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
+      
 let cmdOnCooldown = false, jokeOnCooldown = false, // Boolean to check if command is on cooldown
     animePageCount, mangaPageCount, avgScorePageCount, 
     averageScore;
@@ -39,7 +41,7 @@ const getPageCountAvgScore = async (mediaType) => {
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
-    const ADMIN_PERMISSION = context.mod === true ? true : context.badges.broadcaster === '1' ? true : context.username === process.env.TWITCH_NAME ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : false;
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -174,8 +176,9 @@ async function onCommandHandler (target, context, commandName, client) {
 
 const onCooldown = (commandName, context) => {
     const ADMIN_PERMISSION = context;
+    console.log(ADMIN_PERMISSION);
 
-    if (ADMIN_PERMISSION) { return; } // If admin, ignore cooldown
+    if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(commandName)) { return; } // Ignore cooldown for queue usage
 
     // Manages joke cooldown, and a global cooldown
