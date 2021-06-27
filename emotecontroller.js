@@ -48,7 +48,7 @@ function onEmoteHandler (target, msg, client, emoticons) {
         const emoteCount = {};
 
         // Check to see if message included an emote, then get the emote index from emoticons array
-        const index = emoticons.findIndex(emoticon => msg.includes(emoticon));
+        const index = emoticons.find(emoticon => msg.includes(emoticon));
 
         // Array that checks the last 5 messages
         emoticonChecker.push(emoticons[index]);

@@ -51,7 +51,7 @@ const sneezeObject = {
 };    
 
 const initSneeze = (target, client) => {
-    // responseGiven = false;
+    console.log('test');
     // Every 10 minutes there is a 3% chance for the bot to sneeze in the given language
     if (Math.random() <= CHANCE) {
         sneezeData = getSneezeData();
