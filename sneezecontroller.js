@@ -89,6 +89,8 @@ const initSneeze = (target, client) => {
 
         return true;
     }
+
+    return false;
 }
 
 function getSneezeData () {
