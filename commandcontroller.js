@@ -21,9 +21,9 @@ const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
-      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^![\w]+$/i;
+      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
-let cmdOnCooldown = false, jokeOnCooldown = false, // Boolean to check if command is on cooldown
+let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, 
     averageScore;
 
@@ -158,12 +158,16 @@ async function onCommandHandler (target, context, commandName, client) {
         else if (reSimple.test(commandName)) {
             
             const filter = {
-                $or: [{ name: commandName }, { alias: commandName }]
+                $or: [{ name: commandName.toLowerCase() }, { alias: commandName.toLowerCase() }]
             };
 
             const result = await CommandModel.findOne(filter);
-            if (result) client.say(target, `${result.response}`);
+
+            if (result) { client.say(target, `${result.response}`); }
+            if (ADMIN_PERMISSION === false && result) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
+
             logCommand(commandName, result);
+            onCooldown(commandName, ADMIN_PERMISSION); // Uses result of DB search to see if cooldown needs to be enabled
 
         } else {
             console.log(`* Unknown command ${commandName}`);
@@ -176,13 +180,13 @@ async function onCommandHandler (target, context, commandName, client) {
 
 const onCooldown = (commandName, context) => {
     const ADMIN_PERMISSION = context;
-    console.log(ADMIN_PERMISSION);
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(commandName)) { return; } // Ignore cooldown for queue usage
 
     // Manages joke cooldown, and a global cooldown
     if (reJoke.test(commandName)) {
+
         if (jokeOnCooldown) {
             console.log('Command is on cooldown');
             return true;
@@ -190,13 +194,35 @@ const onCooldown = (commandName, context) => {
             jokeOnCooldown = true;
             setTimeout(() => { jokeOnCooldown = false; }, jokeCooldown);
         }
+    
     } else if (reCheck.test(commandName)) {
+
         if (cmdOnCooldown) {
             console.log('Command is on cooldown');
             return true;
         } else {
             cmdOnCooldown = true;
             setTimeout(() => { cmdOnCooldown = false; }, cooldown);
+        }
+
+    } else if (reSimple.test(commandName)) {
+
+        if (cmdOnCooldown) {
+            console.log('Command is on cooldown');
+            return true;
+        } else {
+
+            // If command is found, enable command cooldown and reset cmdFound to false
+            if (cmdFound) {
+                cmdOnCooldown = true;
+                cmdFound = false;
+                setTimeout(() => { cmdOnCooldown = false; }, cooldown);
+
+            // If no command is found, then set cmdFound to false and return
+            } else {
+                cmdFound = false;
+                return;
+            }
         }
     }
 }
