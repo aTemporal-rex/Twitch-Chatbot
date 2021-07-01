@@ -1,5 +1,5 @@
 const TIME_BEFORE_ANGY = 20000,
-      CHANCE = 0.02, // % chance of sneeze happening
+      CHANCE = 0.005, // % chance of sneeze happening
       responseGiven = []; // Keeps track of if a response was given for each sneeze
 
 let sneezeData,
@@ -51,7 +51,7 @@ const sneezeObject = {
 };    
 
 const initSneeze = (target, client) => {
-    // Every 10 minutes there is a 2% chance for the bot to sneeze in the given language
+    // Every 10 minutes there is a 0.05% chance for the bot to sneeze in the given language
     if (Math.random() <= CHANCE) {
         sneezeData = getSneezeData();
 
