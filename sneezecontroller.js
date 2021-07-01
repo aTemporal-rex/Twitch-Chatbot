@@ -1,5 +1,5 @@
 const TIME_BEFORE_ANGY = 20000,
-      CHANCE = 0.03, // % chance of sneeze happening
+      CHANCE = 0.02, // % chance of sneeze happening
       responseGiven = []; // Keeps track of if a response was given for each sneeze
 
 let sneezeData,
@@ -51,35 +51,33 @@ const sneezeObject = {
 };    
 
 const initSneeze = (target, client) => {
-    console.log('test');
-    // Every 10 minutes there is a 3% chance for the bot to sneeze in the given language
+    // Every 10 minutes there is a 2% chance for the bot to sneeze in the given language
     if (Math.random() <= CHANCE) {
         sneezeData = getSneezeData();
 
         switch (sneezeData.language) {
             case 'English':
-                client.say(target, `/me *aaAACHOOOO*`);
+                client.say(target, `/me *aaAACHOOOO* (${sneezeData.language})`);
                 break;
             case 'French':
-                client.say(target, `/me *aaAATCHUMM*`);
+                client.say(target, `/me *aaAATCHUMM* (${sneezeData.language})`);
                 break;
             case 'German':
-                client.say(target, `/me *haAATSCHII*`);
+                client.say(target, `/me *haAATSCHII* (${sneezeData.language})`);
                 break;
             case 'Spanish':
-                client.say(target, `/me *aaAACHÚÚÚÚ*`);
+                client.say(target, `/me *aaAACHÚÚÚÚ* (${sneezeData.language})`);
                 break;
             case 'Swedish':
-                client.say(target, `/me *aaAATJOOOO*`);
+                client.say(target, `/me *aaAATJOOOO* (${sneezeData.language})`);
                 break;
             case 'Italian':
-                client.say(target, `/me *aaAACCIÙÙÙ*`);
+                client.say(target, `/me *aaAACCIÙÙÙ* (${sneezeData.language})`);
                 break;
         }
 
         setTimeout(function () {
             if (responseGiven.shift() === undefined) {
-                console.log('test');
                 // Check if response is array and pick a random response if it is
                 const response = Array.isArray(sneezeData.response) ? sneezeData.response[Math.floor(Math.random() * sneezeData.response.length)] : sneezeData.response;
                 client.say(target, `I SNEEZED MAYBE ${TIME_BEFORE_ANGY/1000} SECONDS AGO AND NO ONE EVEN SAID ${response}!! BunnyRage`);
