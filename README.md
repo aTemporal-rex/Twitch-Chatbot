@@ -48,6 +48,8 @@ All commands start with a **b** to avoid unintended interaction with other bots
 * **!baddalias ![command name] ![alias name]** - Adds an alias to the selected 
 command  
 * **!bdelalias ![command name] ![alias name]** - Deletes an alias from the selected command
+* **!loop[number] [message]** or **!loop [number] [message]** - Used to loop the given message every [number] minute(s)
+* **!endloop** - Ends the currently active loop
 
 ### Everyone Commands
 * **!anime** - Selects a random anime  

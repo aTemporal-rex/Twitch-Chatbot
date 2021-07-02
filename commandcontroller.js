@@ -1,5 +1,6 @@
 const CommandModel = require('./command');
 const { onQueueHandler } = require('./queuecontroller');
+const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
@@ -21,11 +22,13 @@ const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
+      reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
+      reEndLoop = /^!endloop$/i,
       reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, 
-    averageScore;
+    averageScore, nIntervId;
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -154,8 +157,32 @@ async function onCommandHandler (target, context, commandName, client) {
             // Handles all queue functionality
             onQueueHandler (target, context, commandName.toLowerCase(), client);
 
-        } 
-        else if (reSimple.test(commandName)) {
+        } else if (reLoop.test(commandName) && ADMIN_PERMISSION) {
+
+            logCommand(commandName);
+
+            // Gets the first word of command string
+            const firstWord = commandName.split(' ').slice(0, 1).toString();
+
+            // Seeing if first word has a number in it. This is to check for optional space for !loop [number] command
+            if (/\d/.test(firstWord)) { 
+                const interval = firstWord.replace(/\D/g, '') * 60000;
+                const msg = commandName.split(' ').slice(1).join(' ').toString();
+
+                nIntervId = onLoopHandler(msg, interval, target, client, nIntervId);
+            } else {
+                const interval = commandName.split(' ').slice(1, 2).toString() * 60000;
+                const msg = commandName.split(' ').slice(2).join(' ').toString();
+
+                nIntervId = onLoopHandler(msg, interval, target, client, nIntervId);
+            }
+
+        } else if (reEndLoop.test(commandName) && ADMIN_PERMISSION) {
+
+            logCommand(commandName);
+            nIntervId ? clearInterval(nIntervId) : console.log('No currently active loop');
+
+        } else if (reSimple.test(commandName)) {
             
             const filter = {
                 $or: [{ name: commandName.toLowerCase() }, { alias: commandName.toLowerCase() }]

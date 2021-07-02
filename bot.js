@@ -48,7 +48,7 @@ async function onMessageHandler (target, context, msg, self) {
     // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
     onEmoteHandler(target, msg, client, emoticons);
 
-    // If bot hasn't sneezed, it attempts to sneeze with a 0.05% chance per message
+    // If bot hasn't sneezed, it attempts to sneeze with a 0.01% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
     if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
