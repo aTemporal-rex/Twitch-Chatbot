@@ -34,24 +34,26 @@ const getGlobalEmotes = async () => {
 
 // ** Not currently being used
 const getChannelEmotes = async () => {
-    const data = await axios.get(`https://api.twitch.tv/helix/chat/emotes?broadcaster_id=${process.env.TWITCH_ID}`)
+    const data = await axios.get(`https://api.twitch.tv/helix/chat/emotes?broadcaster_id=${process.env.TWITCH_ID}`);
+    console.log(data);
 
 }
 
 async function initEmotes (emoticons) {
     await getFFZData(emoticons);
     await getBTTVData(emoticons);
+    // await getChannelEmotes();
 }
 
 function onEmoteHandler (target, msg, client, emoticons) {
     if (msgCounter < NUM_MSG_CHECK) {
         const emoteCount = {};
 
-        // Check to see if message included an emote, then get the emote index from emoticons array
-        const index = emoticons.find(emoticon => msg.includes(emoticon));
+        // Check to see if message included an emote, then get the emote from emoticons array
+        const emoticon = emoticons.find(emoticon => new RegExp('\\b' + emoticon + '\\b').exec(msg));
 
         // Array that checks the last 5 messages
-        emoticonChecker.push(emoticons[index]);
+        emoticonChecker.push(emoticon);
 
         // Add each emote to the counts object and their number of occurrences
         emoticonChecker.forEach(emoticon => { emoteCount[emoticon] = (emoteCount[emoticon] || 0) + 1; });
@@ -59,7 +61,9 @@ function onEmoteHandler (target, msg, client, emoticons) {
         // Checking if an emote reaches over 3 occurrences in the past NUM_MSG_CHECK msgs
         const emoteHype = Object.keys(emoteCount).find(emoticon => emoteCount[emoticon] >= 3 && emoticon != 'undefined');
 
-        ++msgCounter;
+        ++msgCounter; // Counter for number of messages being checked
+
+        // If emoteHype is not undefined, display the emote
         if (emoteHype) {
             client.say(target, emoteHype);
             clearEmoteChecker();

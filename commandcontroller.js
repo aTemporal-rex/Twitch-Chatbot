@@ -13,11 +13,11 @@ const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 const cooldown = 4000, // Command cooldown in milliseconds
       jokeCooldown = 40000;
 
-const reMedia = /^!anime{1}?$|^!manga{1}?$/i,
+const reMedia = /^!anime$|^!manga$/i,
       reGreater = /^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i,  // Regex checks if command !anime or !manga is followed by 1 or 2 digits
       reSimple = /^![\w]+$/i,
-      reAdd = /^!baddcommand ![\w]+ [\w\W]*$/i,
-      reDel = /^!bdelcommand ![\w]+$/i,
+      reAdd = /^(?:!baddcommand|!baddcom) ![\w]+ [\w\W]*$/i,
+      reDel = /^(?:!bdelcommand|!bdelcom) ![\w]+$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
       reJoke = /^!jokes?$|^!dadjokes?$/i,
