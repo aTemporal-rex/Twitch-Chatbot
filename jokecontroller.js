@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const reJoke = /^!jokes?$/i,
-      reDadJoke = /^!dadjokes?$/i;
+      reDadJoke = /^!dad ?jokes?$/i;
 
 const config = {
     headers: {

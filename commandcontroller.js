@@ -20,11 +20,11 @@ const reMedia = /^!anime$|^!manga$/i,
       reDel = /^(?:!bdelcommand|!bdelcom) ![\w]+$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
       reDelAlias = /^!bdelalias ![\w]+ ![\w]+$/i,
-      reJoke = /^!jokes?$|^!dadjokes?$/i,
+      reJoke = /^!jokes?$|^!dad ?jokes?$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
-      reCheck = /^!anime{1}?$|^!manga{1}?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
+      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, 
