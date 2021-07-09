@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(helmet());
 
-const emoticons = [];
+const emoticons = ['LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm']; // Initializing with some popular global emotes
 let sneeze = false;
 
 // Define configuration options
