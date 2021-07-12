@@ -24,10 +24,11 @@ const reMedia = /^!anime$|^!manga$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
+      reDeath = /^!death$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
-    animePageCount, mangaPageCount, avgScorePageCount, 
+    animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
     averageScore, nIntervId;
 
 // Get total number of pages for the total list of manga and anime
@@ -182,6 +183,10 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName);
             nIntervId ? clearInterval(nIntervId) : console.log('No currently active loop');
 
+        } else if (reDeath.test(commandName)) {
+            ++deathCount;
+            client.say(target, `Death count: ${deathCount}`);
+            console.log(`Death count: ${deathCount}`);
         } else if (reSimple.test(commandName)) {
             
             const filter = {
