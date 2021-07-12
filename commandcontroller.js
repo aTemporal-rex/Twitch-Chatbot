@@ -25,6 +25,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death$/i,
+      reDeathCount = /^(?:!dcount|!deathcount)/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
@@ -184,9 +185,16 @@ async function onCommandHandler (target, context, commandName, client) {
             nIntervId ? clearInterval(nIntervId) : console.log('No currently active loop');
 
         } else if (reDeath.test(commandName) && ADMIN_PERMISSION) {
+
             ++deathCount;
-            client.say(target, `Death count: ${deathCount}`);
+            client.say(target, `Death acquired! ${deathCount} dittoDumper`);
+            console.log(`Death acquired! ${deathCount}`);
+
+        } else if (reDeathCount.test(commandName)) {
+
+            client.say(target, `Death count: ${deathCount} AUGH`);
             console.log(`Death count: ${deathCount}`);
+
         } else if (reSimple.test(commandName)) {
             
             const filter = {
