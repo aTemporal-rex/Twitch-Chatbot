@@ -16,6 +16,7 @@ const cooldown = 4000, // Command cooldown in milliseconds
 const reMedia = /^!anime$|^!manga$/i,
       reGreater = /^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i,  // Regex checks if command !anime or !manga is followed by 1 or 2 digits
       reSimple = /^![\w]+$/i,
+      reSay = /^!say [\w\W]*$/i,
       reAdd = /^(?:!baddcommand|!baddcom) ![\w]+ [\w\W]*$/i,
       reDel = /^(?:!bdelcommand|!bdelcom) ![\w]+$/i,
       reAddAlias = /^!baddalias ![\w]+ ![\w]+$/i,
@@ -91,6 +92,13 @@ async function onCommandHandler (target, context, commandName, client) {
                 const manga = await getManga('greater', avgScorePageCount, averageScore);
                 manga ? client.say(target, `Your next favorite manga is ${manga} TehePelo`) : console.log('Media was undefined');
             }
+
+        } else if (reSay.test(commandName) && ADMIN_PERMISSION) {
+            
+            logCommand(commandName);
+
+            const msg = commandName.split(' ').slice(1).join(' ');
+            client.say(target, msg);
 
         } else if (reAdd.test(commandName) && ADMIN_PERMISSION) {
             
