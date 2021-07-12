@@ -183,7 +183,7 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName);
             nIntervId ? clearInterval(nIntervId) : console.log('No currently active loop');
 
-        } else if (reDeath.test(commandName)) {
+        } else if (reDeath.test(commandName) && ADMIN_PERMISSION) {
             ++deathCount;
             client.say(target, `Death count: ${deathCount}`);
             console.log(`Death count: ${deathCount}`);
