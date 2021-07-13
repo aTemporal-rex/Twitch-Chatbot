@@ -25,8 +25,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
-      reDeath = /^!death ?\d{0,3}$/i,
-      reDeathCount = /^(?:!dcount|!deathcount)/i,
+      reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
@@ -84,7 +83,7 @@ async function onCommandHandler (target, context, commandName, client) {
         } else if (reGreater.test(commandName)) {
 
             logCommand(commandName);
-            // Checks if index of first occurring a is 1. This would mean command is !anime[number]
+            // Checks if index of first occurring a is 1. This would mean command is !anime[number] rather than !manga[number]
             if (commandName.indexOf('a') === 1) {
                 const anime = await getAnime('greater', avgScorePageCount, averageScore);
                 anime ? client.say(target, `Your next favorite anime is ${anime} TehePelo`) : console.log('Media was undefined');
@@ -192,24 +191,31 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName);
             nIntervId ? clearInterval(nIntervId) : console.log('No currently active loop');
 
-        } else if (reDeath.test(commandName) && ADMIN_PERMISSION) {
+        } else if (reDeath.test(commandName)) {
 
-            // Replace non digits with empty string, then check if string is empty
-            if (commandName.replace(/\D/g, '').length > 0) { 
-                ++deathCount;
+            // Used to determine if command given is either !dcount or !deathcount
+            const countCommand = reDeath.exec(commandName);
+
+            // countCommand[1] is undefined unless command given is part of grouped commands
+            if (countCommand[1]) {
+
+                if (deathCount === 0) { return; }
+                client.say(target, `Deaths so far: ${deathCount} AUGH`);
+                console.log(`Deaths so far: ${deathCount}`);
+
+            } else if (ADMIN_PERMISSION) {
+
+                // Replace non digits with empty string, then check if string is empty
+                if (commandName.replace(/\D/g, '').length === 0) { 
+                    ++deathCount;
+                }
+                else { 
+                    deathCount = commandName.replace(/\D/g, '');
+                }
+                
+                client.say(target, `Deaths be goin up ppHop (${deathCount})`);
+                console.log(`Deaths be goin up (${deathCount})`);
             }
-            else { 
-                deathCount = commandName.replace(/\D/g, '');
-            }
-            
-            client.say(target, `Deaths be goin up ppHop (${deathCount})`);
-            console.log(`Deaths be goin up (${deathCount})`);
-
-        } else if (reDeathCount.test(commandName)) {
-
-            if (deathCount === 0) { return; }
-            client.say(target, `Deaths so far: ${deathCount} AUGH`);
-            console.log(`Deaths so far: ${deathCount}`);
 
         } else if (reSimple.test(commandName)) {
             
