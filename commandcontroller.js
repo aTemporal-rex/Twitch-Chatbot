@@ -25,7 +25,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reQueue = /^!bstart$|^!bjoin$|^!bqueue$|^!bclear$|^!bnext ?\d{0,2}|^!bend$|^!bcurrent$|^!bclose$|^!bopen$|^!bpos$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
-      reDeath = /^!death$/i,
+      reDeath = /^!death ?\d{0,3}$/i,
       reDeathCount = /^(?:!dcount|!deathcount)/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
@@ -194,14 +194,22 @@ async function onCommandHandler (target, context, commandName, client) {
 
         } else if (reDeath.test(commandName) && ADMIN_PERMISSION) {
 
-            ++deathCount;
-            client.say(target, `Death acquired! ${deathCount} dittoDumper`);
-            console.log(`Death acquired! ${deathCount}`);
+            // Replace non digits with empty string, then check if string is empty
+            if (commandName.replace(/\D/g, '').length > 0) { 
+                ++deathCount;
+            }
+            else { 
+                deathCount = commandName.replace(/\D/g, '');
+            }
+            
+            client.say(target, `Deaths be goin up ppHop (${deathCount})`);
+            console.log(`Deaths be goin up (${deathCount})`);
 
         } else if (reDeathCount.test(commandName)) {
 
-            client.say(target, `Death count: ${deathCount} AUGH`);
-            console.log(`Death count: ${deathCount}`);
+            if (deathCount === 0) { return; }
+            client.say(target, `Deaths so far: ${deathCount} AUGH`);
+            console.log(`Deaths so far: ${deathCount}`);
 
         } else if (reSimple.test(commandName)) {
             
