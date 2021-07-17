@@ -31,8 +31,8 @@ module.exports.getQuery = (queryType, mediaType) => {
                 }
             }
             `;
-            case 'greater':
-                return `
+        case 'greater':
+            return `
                 query ($page: Int, $isAdult: Boolean, $averageScore_greater: Int) {
                     Page (page: $page) {
                         pageInfo {
@@ -48,6 +48,17 @@ module.exports.getQuery = (queryType, mediaType) => {
                                 english
                             }
                         }
+                    }
+                }
+                `;
+        case 'pokemon1':
+            return `
+                query gen1PokemonQuery {
+                    gen1_species: pokemon_v2_pokemonspecies(where: {pokemon_v2_generation: {name: {_eq: "generation-i"}}}, order_by: {id: asc}) {
+                      name
+                      id
+                      is_legendary
+                      is_mythical
                     }
                 }
                 `;

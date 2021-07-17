@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const { onCommandHandler } = require('./commandcontroller');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
+const { startPokemon } = require('./pokemoncontroller');
 const db = require('./db');
 require('dotenv').config();
 
@@ -62,6 +63,7 @@ async function onMessageHandler (target, context, msg, self) {
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
     await initEmotes(emoticons);
+    // await startPokemon(client, process.env.CHANNEL_NAME);
 
     console.log(`* Connected to ${addr}:${port}`);
 

@@ -2,6 +2,7 @@ const CommandModel = require('./command');
 const { onQueueHandler } = require('./queuecontroller');
 const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
+const { generatePokemon, getPokemon } = require('./pokemoncontroller');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
@@ -26,11 +27,13 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
+      reStartPokemon = /^!startpokemon$/i,
+      rePokemon = /^!catch [\w]+$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
-    averageScore, nIntervId;
+    averageScore, nIntervId, pokemons, chosenPokemon;
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -153,6 +156,24 @@ async function onCommandHandler (target, context, commandName, client) {
             const result = await CommandModel.findOneAndUpdate(filter, {$pull: alias}, {new: true});
             logCommand(commandName, result);
 
+        } else if (reStartPokemon.test(commandName) && ADMIN_PERMISSION) {
+
+            pokemons = await getPokemon('pokemon1');
+            setInterval(() => {
+                chosenPokemon = generatePokemon(pokemons);
+                client.say(target, `Wild ${chosenPokemon} appeared!`);
+                console.log(target, `Wild ${chosenPokemon} appeared!`);
+            }, 600000);
+
+        } else if (rePokemon.test(commandName)) {
+
+            const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
+            if (pokemon === chosenPokemon.toLowerCase()) {
+                client.say(target, `Gotcha! ${chosenPokemon} was caught!`);
+                console.log(`Gotcha! ${chosenPokemon} was caught!`);
+                chosenPokemon = null;
+            }
+            
         } else if (reJoke.test(commandName)) {
 
             logCommand(commandName);
