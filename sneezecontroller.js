@@ -1,4 +1,4 @@
-const TIME_BEFORE_ANGY = 20000,
+const TIME_BEFORE_ANGY = 35000,
       CHANCE = 0.001, // % chance of sneeze happening
       responseGiven = []; // Keeps track of if a response was given for each sneeze
 
@@ -80,7 +80,7 @@ const initSneeze = (target, client) => {
             if (responseGiven.shift() === undefined) {
                 // Check if response is array and pick a random response if it is
                 const response = Array.isArray(sneezeData.response) ? sneezeData.response[Math.floor(Math.random() * sneezeData.response.length)] : sneezeData.response;
-                client.say(target, `I SNEEZED MAYBE ${TIME_BEFORE_ANGY/1000} SECONDS AGO AND NO ONE EVEN SAID ${response}!! BunnyRage`);
+                client.say(target, `I SNEEZED ${TIME_BEFORE_ANGY/1000} SECONDS AGO AND NO ONE EVEN SAID ${response}!! BunnyRage`);
                 botAngy = true;
             }
         }, TIME_BEFORE_ANGY);
@@ -118,7 +118,7 @@ function onSneezeHandler (target, msg, client) {
     // If appropriate response is given, pushes true to responseGiven array to handle the result of this sneeze
     // Returns false to say that sneeze has been resolved
     if (sneezeData.regex.test(msg.trim())) {
-        client.say(target, `${sneezeData.reply}`);
+        client.say(target, `${sneezeData.reply}!`);
         responseGiven.push(true); 
         return false;
     } else {

@@ -1,24 +1,37 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-const legendaryChance = 0.01;
+const rareChance = 0.01, appearanceInterval = 600000;
+let chosenPokemon;
+
+async function startPokemon(client, target, done) {
+    pokemons = await getPokemon('pokemon1');
+    setInterval(() => {
+        chosenPokemon = generatePokemon(pokemons);
+        client.say(target, `Wild ${chosenPokemon} appeared!`);
+        console.log(`Wild ${chosenPokemon} appeared!`);
+        done();
+    }, appearanceInterval);
+}
 
 function generatePokemon (pokemons) {
-    if (Math.random() <= legendaryChance) {
+    if (Math.random() <= rareChance) {
         const filterPokemon = pokemons.data.gen1_species.filter(pokemon => pokemon.is_legendary === true || pokemon.is_mythical === true);
         const random = Math.floor(Math.random() * filterPokemon.length);
 
-        // Choosing pokemon from filtered list, then uppercasing first letter of name
-        // const pokemon = filterPokemon[random].name[0].toUpperCase() + filterPokemon[random].name.slice(1); 
+        // Choosing pokemon from filtered list, then uppercasing the name
         return filterPokemon[random].name.toUpperCase();
     } else {
         const filterPokemon = pokemons.data.gen1_species.filter(pokemon => pokemon.is_legendary === false);
         const random = Math.floor(Math.random() * filterPokemon.length);
 
-        // Choosing pokemon from filtered list, then uppercasing first letter of name
-        // const pokemon = filterPokemon[random].name[0].toUpperCase() + filterPokemon[random].name.slice(1);
+        // Choosing pokemon from filtered list, then uppercasing the name
         return filterPokemon[random].name.toUpperCase();
     }
+}
+
+function getChosenPokemon() {
+    return chosenPokemon;
 }
 
 async function getPokemon (queryType) {
@@ -57,5 +70,7 @@ async function handleError(error) {
 
 module.exports = {
     getPokemon,
-    generatePokemon
-}
+    generatePokemon,
+    getChosenPokemon,
+    startPokemon
+};

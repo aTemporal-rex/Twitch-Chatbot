@@ -1,8 +1,9 @@
 const CommandModel = require('./command');
+const PokemonModel = require('./pokemon');
 const { onQueueHandler } = require('./queuecontroller');
 const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
-const { generatePokemon, getPokemon } = require('./pokemoncontroller');
+const { generatePokemon, getPokemon, getChosenPokemon, startPokemon } = require('./pokemoncontroller');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
@@ -27,13 +28,12 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
-      reStartPokemon = /^!startpokemon$/i,
-      rePokemon = /^!catch [\w]+$/i,
+      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
-    averageScore, nIntervId, pokemons, chosenPokemon;
+    averageScore, nIntervId, chosenPokemon;
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -50,6 +50,7 @@ const getPageCountAvgScore = async (mediaType) => {
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
     const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : false;
+    console.log(context);
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -156,24 +157,52 @@ async function onCommandHandler (target, context, commandName, client) {
             const result = await CommandModel.findOneAndUpdate(filter, {$pull: alias}, {new: true});
             logCommand(commandName, result);
 
-        } else if (reStartPokemon.test(commandName) && ADMIN_PERMISSION) {
-
-            pokemons = await getPokemon('pokemon1');
-            setInterval(() => {
-                chosenPokemon = generatePokemon(pokemons);
-                client.say(target, `Wild ${chosenPokemon} appeared!`);
-                console.log(target, `Wild ${chosenPokemon} appeared!`);
-            }, 600000);
-
         } else if (rePokemon.test(commandName)) {
 
-            const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
-            if (pokemon === chosenPokemon.toLowerCase()) {
-                client.say(target, `Gotcha! ${chosenPokemon} was caught!`);
-                console.log(`Gotcha! ${chosenPokemon} was caught!`);
-                chosenPokemon = null;
+            // Handle !startpokemon command else handle catch pokemon command
+            if (commandName.toLowerCase() === '!startpokemon') {
+                startPokemon(client, target, () => {
+                    chosenPokemon = getChosenPokemon();
+                });
+            } else if (rePokemon.exec(commandName)[1]) {
+                const filter = { trainerId: context['user-id'] };
+
+                const result = await PokemonModel.findOne(filter);
+                let myPokemon = result.pokemon.join(' ');
+
+                // Replace starter pokemon with corresponding twitch emote
+                if (myPokemon.includes('Squirtle')) { 
+                    myPokemon = myPokemon.replace(/\bSquirtle\b/, 'SquirtleJam');
+                } 
+
+                if (myPokemon.includes('Bulbasaur')) {
+                    myPokemon = myPokemon.replace('Bulbasaur', 'bulbaDance');
+                } 
+
+                if (myPokemon.includes('Charmander')) {
+                    myPokemon = myPokemon.replace('Charmander', 'RareChar');
+                }
+
+                client.say(target, `${context['display-name']}'s pokemon: ${myPokemon}`);
+                console.log(`${context['display-name']}'s pokemon: ${myPokemon}`);
+
+            } else {
+                if (chosenPokemon === undefined) { return; } // If pokemon hasn't appeared yet then return
+
+                const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
+                if (pokemon === chosenPokemon.toLowerCase()) {
+                    client.say(target, `Gotcha! ${chosenPokemon} was caught!`);
+                    console.log(`Gotcha! ${chosenPokemon} was caught!`);
+                    
+                    const filter = { trainerId: context['user-id'] };
+                    const newPokemon = { pokemon: chosenPokemon[0] + chosenPokemon.slice(1).toLowerCase() };
+                    chosenPokemon = undefined;
+
+                    const result = await PokemonModel.findOneAndUpdate(filter, { trainer: context['display-name'], $push: newPokemon}, options);
+                    logCommand(commandName, result);
+                }
             }
-            
+
         } else if (reJoke.test(commandName)) {
 
             logCommand(commandName);
