@@ -6,6 +6,7 @@ let chosenPokemon;
 
 async function startPokemon(client, target, done) {
     pokemons = await getPokemon('pokemon1');
+    client.say(target, `Wild pokemon have invaded the stream! PokemonTrainer When a pokemon appears, type !catch [name] to catch it.`)
     setInterval(() => {
         chosenPokemon = generatePokemon(pokemons);
         client.say(target, `Wild ${chosenPokemon} appeared!`);

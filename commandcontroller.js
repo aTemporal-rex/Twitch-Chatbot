@@ -50,7 +50,6 @@ const getPageCountAvgScore = async (mediaType) => {
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
     const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : false;
-    console.log(context);
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -160,7 +159,7 @@ async function onCommandHandler (target, context, commandName, client) {
         } else if (rePokemon.test(commandName)) {
 
             // Handle !startpokemon command else handle catch pokemon command
-            if (commandName.toLowerCase() === '!startpokemon') {
+            if (commandName.toLowerCase() === '!startpokemon' && ADMIN_PERMISSION) {
                 startPokemon(client, target, () => {
                     chosenPokemon = getChosenPokemon();
                 });
@@ -170,17 +169,25 @@ async function onCommandHandler (target, context, commandName, client) {
                 const result = await PokemonModel.findOne(filter);
                 let myPokemon = result.pokemon.join(' ');
 
-                // Replace starter pokemon with corresponding twitch emote
+                // Replace pokemon with corresponding twitch emote
                 if (myPokemon.includes('Squirtle')) { 
-                    myPokemon = myPokemon.replace(/\bSquirtle\b/, 'SquirtleJam');
+                    myPokemon = myPokemon.replace(/\bSquirtle\b/g, 'SquirtleJam');
                 } 
 
                 if (myPokemon.includes('Bulbasaur')) {
-                    myPokemon = myPokemon.replace('Bulbasaur', 'bulbaDance');
+                    myPokemon = myPokemon.replace(/\bBulbasaur\b/g, 'bulbaDance');
                 } 
 
                 if (myPokemon.includes('Charmander')) {
-                    myPokemon = myPokemon.replace('Charmander', 'RareChar');
+                    myPokemon = myPokemon.replace(/\bCharmander\b/g, 'RareChar');
+                }
+
+                if (myPokemon.includes('Ditto')) {
+                    myPokemon = myPokemon.replace(/\bDitto\b/g, 'dittoDumper');
+                }
+
+                if (myPokemon.includes('Mew')) {
+                    myPokemon = myPokemon.replace(/\bMew\b/g, 'MewSpin');
                 }
 
                 client.say(target, `${context['display-name']}'s pokemon: ${myPokemon}`);
@@ -191,7 +198,7 @@ async function onCommandHandler (target, context, commandName, client) {
 
                 const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
                 if (pokemon === chosenPokemon.toLowerCase()) {
-                    client.say(target, `Gotcha! ${chosenPokemon} was caught!`);
+                    client.say(target, `Gotcha! ${chosenPokemon} was caught! pokeCatch`);
                     console.log(`Gotcha! ${chosenPokemon} was caught!`);
                     
                     const filter = { trainerId: context['user-id'] };
