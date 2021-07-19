@@ -2,17 +2,37 @@ const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
 const rareChance = 0.01, appearanceInterval = 600000;
-let chosenPokemon;
+let chosenPokemon, pokemons;
 
-async function startPokemon(client, target, done) {
+async function startPokemon(client, target, pokeIntervId, done) {
+
+    // If pokeIntervId exists then that means there's an active game
+    if (pokeIntervId) {
+        console.log('Pokemon game is currently active');
+        return;
+    }
+
+    // Get array filled with generation 1 pokemon
     pokemons = await getPokemon('pokemon1');
     client.say(target, `Wild pokemon have invaded the stream! PokemonTrainer When a pokemon appears, type !catch [name] to catch it.`)
-    setInterval(() => {
+    pokeIntervId = setInterval(() => {
         chosenPokemon = generatePokemon(pokemons);
         client.say(target, `Wild ${chosenPokemon} appeared!`);
         console.log(`Wild ${chosenPokemon} appeared!`);
         done();
     }, appearanceInterval);
+
+    console.log('Pokemon game started');
+    return pokeIntervId;
+}
+
+function stopPokemon(pokeIntervId) {
+    if (pokeIntervId) {
+        clearInterval(pokeIntervId);
+        console.log('Pokemon game stopped');
+    } else {
+        console.log('No currently active pokemon game');
+    }
 }
 
 function generatePokemon (pokemons) {
@@ -59,7 +79,7 @@ async function handleResponse(response) {
     });
 }
 
-// Formats the received data and displays it
+// Returns the Generation 1 Pokemon data
 async function handleData(data) {
     return data;
 }
@@ -70,8 +90,7 @@ async function handleError(error) {
 }
 
 module.exports = {
-    getPokemon,
-    generatePokemon,
     getChosenPokemon,
-    startPokemon
+    startPokemon,
+    stopPokemon
 };

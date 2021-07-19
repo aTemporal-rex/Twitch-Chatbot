@@ -3,7 +3,7 @@ const PokemonModel = require('./pokemon');
 const { onQueueHandler } = require('./queuecontroller');
 const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
-const { generatePokemon, getPokemon, getChosenPokemon, startPokemon } = require('./pokemoncontroller');
+const { getChosenPokemon, startPokemon, stopPokemon } = require('./pokemoncontroller');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
@@ -28,12 +28,12 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
-      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$/i,
+      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
-    averageScore, nIntervId, chosenPokemon;
+    averageScore, nIntervId, pokeIntervId, chosenPokemon;
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -160,14 +160,21 @@ async function onCommandHandler (target, context, commandName, client) {
 
             // Handle !startpokemon command else handle catch pokemon command
             if (commandName.toLowerCase() === '!startpokemon' && ADMIN_PERMISSION) {
-                startPokemon(client, target, () => {
+
+                logCommand(commandName);
+                pokeIntervId = await startPokemon(client, target, pokeIntervId, () => {
                     chosenPokemon = getChosenPokemon();
                 });
-            } else if (rePokemon.exec(commandName)[1]) {
-                const filter = { trainerId: context['user-id'] };
 
+            } else if (rePokemon.exec(commandName)[1]) {
+
+                logCommand(commandName);
+                const filter = { trainerId: context['user-id'] };
                 const result = await PokemonModel.findOne(filter);
-                let myPokemon = result.pokemon.join(' ');
+
+                if (result === null) { return; }
+                
+                let myPokemon = result.pokemon.join(' - ');
 
                 // Replace pokemon with corresponding twitch emote
                 if (myPokemon.includes('Squirtle')) { 
@@ -192,8 +199,15 @@ async function onCommandHandler (target, context, commandName, client) {
 
                 client.say(target, `${context['display-name']}'s pokemon: ${myPokemon}`);
                 console.log(`${context['display-name']}'s pokemon: ${myPokemon}`);
+                
+
+            } else if (rePokemon.exec(commandName)[2]) {
+
+                logCommand(commandName);
+                stopPokemon(pokeIntervId);
 
             } else {
+
                 if (chosenPokemon === undefined) { return; } // If pokemon hasn't appeared yet then return
 
                 const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
@@ -208,6 +222,7 @@ async function onCommandHandler (target, context, commandName, client) {
                     const result = await PokemonModel.findOneAndUpdate(filter, { trainer: context['display-name'], $push: newPokemon}, options);
                     logCommand(commandName, result);
                 }
+
             }
 
         } else if (reJoke.test(commandName)) {
