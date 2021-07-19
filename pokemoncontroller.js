@@ -1,7 +1,7 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-const rareChance = 0.01, appearanceInterval = 600000;
+const rareChance = 0.01, appearanceInterval = 420000;
 let chosenPokemon, pokemons;
 
 async function startPokemon(client, target, pokeIntervId, done) {
