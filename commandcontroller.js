@@ -158,7 +158,7 @@ async function onCommandHandler (target, context, commandName, client) {
 
         } else if (rePokemon.test(commandName)) {
 
-            // Handle !startpokemon command else handle catch pokemon command
+            // Handle !startpokemon command
             if (commandName.toLowerCase() === '!startpokemon' && ADMIN_PERMISSION) {
 
                 logCommand(commandName);
@@ -166,6 +166,7 @@ async function onCommandHandler (target, context, commandName, client) {
                     chosenPokemon = getChosenPokemon();
                 });
 
+            // Group [1] is !mypokemon and !mypokes
             } else if (rePokemon.exec(commandName)[1]) {
 
                 logCommand(commandName);
@@ -174,7 +175,7 @@ async function onCommandHandler (target, context, commandName, client) {
 
                 if (result === null) { return; }
                 
-                let myPokemon = result.pokemon.join(' - ');
+                let myPokemon = result.pokemon.map(pokemon =>  pokemon.name).join(' - ');
 
                 // Replace pokemon with corresponding twitch emote
                 if (myPokemon.includes('Squirtle')) { 
@@ -197,30 +198,32 @@ async function onCommandHandler (target, context, commandName, client) {
                     myPokemon = myPokemon.replace(/\bMew\b/g, 'MewSpin');
                 }
 
-                client.say(target, `${context['display-name']}'s pokemon: ${myPokemon}`);
-                console.log(`${context['display-name']}'s pokemon: ${myPokemon}`);
+                client.say(target, `${context['display-name']}'s Pokemon: ${myPokemon}`);
+                console.log(`${context['display-name']}'s Pokemon: ${myPokemon}`);
                 
 
+            // Group [2] is !endpokemon and !stoppokemon
             } else if (rePokemon.exec(commandName)[2]) {
 
                 logCommand(commandName);
                 stopPokemon(pokeIntervId);
 
+            // Handles !catch pokemon command
             } else {
 
                 if (chosenPokemon === undefined) { return; } // If pokemon hasn't appeared yet then return
 
                 const pokemon = commandName.split(' ').slice(1).join(' ').toString().toLowerCase();
-                if (pokemon === chosenPokemon.toLowerCase()) {
-                    client.say(target, `Gotcha! ${chosenPokemon} was caught! pokeCatch`);
-                    console.log(`Gotcha! ${chosenPokemon} was caught!`);
+                if (pokemon === chosenPokemon.name.toLowerCase()) {
+                    logCommand(commandName);
+                    client.say(target, `Gotcha! ${chosenPokemon.name.toUpperCase()} was caught! pokeCatch`);
+                    console.log(`Gotcha! ${chosenPokemon.name.toUpperCase()} was caught!`);
                     
                     const filter = { trainerId: context['user-id'] };
-                    const newPokemon = { pokemon: chosenPokemon[0] + chosenPokemon.slice(1).toLowerCase() };
+                    const newPokemon = { pokemon: {name: chosenPokemon.name[0].toUpperCase() + chosenPokemon.name.slice(1).toLowerCase()} };
                     chosenPokemon = undefined;
 
                     const result = await PokemonModel.findOneAndUpdate(filter, { trainer: context['display-name'], $push: newPokemon}, options);
-                    logCommand(commandName, result);
                 }
 
             }

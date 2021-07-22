@@ -55,10 +55,11 @@ module.exports.getQuery = (queryType, mediaType) => {
             return `
                 query gen1PokemonQuery {
                     gen1_species: pokemon_v2_pokemonspecies(where: {pokemon_v2_generation: {name: {_eq: "generation-i"}}}, order_by: {id: asc}) {
-                      name
-                      id
-                      is_legendary
-                      is_mythical
+                        name
+                        id
+                        capture_rate
+                        is_legendary
+                        is_mythical
                     }
                 }
                 `;

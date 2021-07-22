@@ -1,8 +1,9 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
-const rareChance = 0.01, appearanceInterval = 330000;
-let chosenPokemon, pokemons;
+const rareChance = 0.01;
+let chosenPokemon, pokemons,
+    appearanceInterval = Math.floor(Math.random() * 330000) + 120000; // Appearance interval between 2-7 minutes
 
 async function startPokemon(client, target, pokeIntervId, done) {
 
@@ -12,13 +13,20 @@ async function startPokemon(client, target, pokeIntervId, done) {
         return;
     }
 
+    start = Date.now();
     // Get array filled with generation 1 pokemon
     pokemons = await getPokemon('pokemon1');
     client.say(target, `Wild pokemon have invaded the stream! PokemonTrainer When a pokemon appears, type !catch [name] to catch it.`)
     pokeIntervId = setInterval(() => {
+        // Generate a random pokemon
         chosenPokemon = generatePokemon(pokemons);
-        client.say(target, `Wild ${chosenPokemon} appeared!`);
-        console.log(`Wild ${chosenPokemon} appeared!`);
+
+        client.say(target, `Wild ${chosenPokemon.name.toUpperCase()} appeared!`);
+        console.log(`Wild ${chosenPokemon.name.toUpperCase()} appeared!`);
+
+        // Generate next encounter time between 2 minutes and 7 minutes
+        appearanceInterval = Math.floor(Math.random() * 420000) + 120000;
+
         done();
     }, appearanceInterval);
 
@@ -47,7 +55,7 @@ function generatePokemon (pokemons) {
         const random = Math.floor(Math.random() * filterPokemon.length);
 
         // Choosing pokemon from filtered list, then uppercasing the name
-        return filterPokemon[random].name.toUpperCase();
+        return filterPokemon[random];
     }
 }
 
@@ -81,6 +89,7 @@ async function handleResponse(response) {
 
 // Returns the Generation 1 Pokemon data
 async function handleData(data) {
+    // console.log(JSON.stringify(data.data.gen1_species, null, 2));
     return data;
 }
 
