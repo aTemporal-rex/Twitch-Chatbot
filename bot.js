@@ -62,16 +62,15 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    await initEmotes(emoticons);
-    // await startPokemon(client, process.env.CHANNEL_NAME);
+    // await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
     // Change client color
     client.color('HotPink');
 
-    // Declare the glorious arrival of Bunny Senpai Bot
-    client.say(process.env.CHANNEL_NAME, 'Bunny Senpai has arrived! dittoDumper');
+    // Declare the glorious arrival of Bunni Senpai Bot
+    client.say(process.env.CHANNEL_NAME, 'Bunni Senpai has arrived! dittoDumper');
 }
 
 // This is necessary to prevent heroku from disconnecting

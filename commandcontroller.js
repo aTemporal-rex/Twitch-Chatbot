@@ -8,6 +8,7 @@ const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
 const db = require('./db');
+const pokemon = require('./pokemon');
 require('dotenv').config();
 
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
@@ -28,7 +29,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
-      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$/i,
+      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
@@ -203,10 +204,54 @@ async function onCommandHandler (target, context, commandName, client) {
                 
 
             // Group [2] is !endpokemon and !stoppokemon
-            } else if (rePokemon.exec(commandName)[2]) {
+            } else if (rePokemon.exec(commandName)[2] && ADMIN_PERMISSION) {
 
                 logCommand(commandName);
                 stopPokemon(pokeIntervId);
+
+            // Handles selectPokemon command
+            } else if (rePokemon.exec(commandName)[3]) {
+                console.log(rePokemon.exec(commandName));
+
+                const trainerId = { trainerId: context['user-id'] };
+
+                const trainer = await PokemonModel.findOne(trainerId);
+
+                const requestedPokemon = trainer.pokemon.find(pokemon => pokemon.name.toLowerCase() === commandName.split(' ')[1].toLowerCase());
+                const selectedPokemon = trainer.selectedPokemon;
+
+                // If trainer does not have the requested pokemon, then return
+                if (requestedPokemon === undefined) { return; }
+
+                console.log(selectedPokemon);
+                console.log(requestedPokemon);
+
+
+                // console.log(`Testing select pokemon: ${trainer.pokemon.find(pokemon => pokemon._id == requestedPokemon._id)}`);
+
+                
+                // Check if the trainer already has requested pokemon selected
+                if (requestedPokemon.name != selectedPokemon.name) {
+
+                    const findPokemon = trainer.pokemon.find(pokemon => pokemon.name === selectedPokemon.name);
+                    console.log(findPokemon);
+
+                    // Person.update(
+                    //     {
+                    //       _id: 5,
+                    //       grades: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
+                    //     },
+                    //     { $set: { "grades.$.std" : 6 } }
+                    //  )
+
+
+                    // This somehow updates the wins of the pokemon whenever a new selectedPokemon is chosen
+                    const result = await PokemonModel.findOneAndUpdate({trainerId: context['user-id'], pokemon: { $elemMatch: { name:  findPokemon.name, _id: findPokemon._id }}}, { $set: { "pokemon.$.wins" : selectedPokemon.wins }});
+                    console.log(result);
+
+                    const resultSelected = await PokemonModel.updateOne(trainerId, { $set: { selectedPokemon: requestedPokemon }}, options);
+                    // console.log(resultSelected);
+                }
 
             // Handles !catch pokemon command
             } else {

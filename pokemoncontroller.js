@@ -3,7 +3,8 @@ const { getQuery } = require('./querygetter');
 
 const rareChance = 0.01;
 let chosenPokemon, pokemons,
-    appearanceInterval = Math.floor(Math.random() * 330000) + 120000; // Appearance interval between 2-7 minutes
+    appearanceInterval = 5000;
+    // appearanceInterval = Math.floor(Math.random() * 330000) + 120000; // Appearance interval between 2-7 minutes
 
 async function startPokemon(client, target, pokeIntervId, done) {
 
@@ -25,7 +26,7 @@ async function startPokemon(client, target, pokeIntervId, done) {
         console.log(`Wild ${chosenPokemon.name.toUpperCase()} appeared!`);
 
         // Generate next encounter time between 2 minutes and 7 minutes
-        appearanceInterval = Math.floor(Math.random() * 420000) + 120000;
+        // appearanceInterval = Math.floor(Math.random() * 420000) + 120000;
 
         done();
     }, appearanceInterval);
