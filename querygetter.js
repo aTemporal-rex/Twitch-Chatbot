@@ -63,6 +63,18 @@ module.exports.getQuery = (queryType, mediaType) => {
                     }
                 }
                 `;
+        case 'evolution1':
+            return `
+            query gen1EvolutionQuery {
+                gen1_species: pokemon_v2_pokemonspecies(order_by: {id: asc}, where: {generation_id: {_eq: 1}, evolves_from_species_id: {_is_null: true}}) {
+                  pokemon_v2_evolutionchain {
+                    pokemon_v2_pokemonspecies(order_by: {id: asc}) {
+                      name
+                    }
+                  }
+                }
+              }              
+              `;
         default:
             break;
     }

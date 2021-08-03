@@ -2,7 +2,7 @@ const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
 
 const rareChance = 0.01;
-let chosenPokemon, pokemons,
+let chosenPokemon, pokemons, evolutions,
     appearanceInterval = 5000;
     // appearanceInterval = Math.floor(Math.random() * 330000) + 120000; // Appearance interval between 2-7 minutes
 
@@ -17,7 +17,7 @@ async function startPokemon(client, target, pokeIntervId, done) {
     start = Date.now();
     // Get array filled with generation 1 pokemon
     pokemons = await getPokemon('pokemon1');
-    client.say(target, `Wild pokemon have invaded the stream! PokemonTrainer When a pokemon appears, type !catch [name] to catch it.`)
+    client.say(target, `Wild pokemon have invaded the stream! PokemonTrainer When a pokemon appears, type !catch [name] to catch it.`);
     pokeIntervId = setInterval(() => {
         // Generate a random pokemon
         chosenPokemon = generatePokemon(pokemons);
@@ -31,6 +31,9 @@ async function startPokemon(client, target, pokeIntervId, done) {
         done();
     }, appearanceInterval);
 
+    evolutions = await getEvolutions('evolution1');
+    console.log(evolutions.data.gen1_species[0].pokemon_v2_evolutionchain.pokemon_v2_pokemonspecies);
+    
     console.log('Pokemon game started');
     return pokeIntervId;
 }
@@ -79,6 +82,24 @@ async function getPokemon (queryType) {
             })
         };
 
+    return fetch(url, options).then(handleResponse).then(handleData).catch(handleError);
+}
+
+async function getEvolutions (queryType) {
+    const query = getQuery(queryType);
+
+    const url = 'https://beta.pokeapi.co/graphql/v1beta',
+        options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query
+            })
+        };
+        
     return fetch(url, options).then(handleResponse).then(handleData).catch(handleError);
 }
 
