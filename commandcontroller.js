@@ -211,46 +211,32 @@ async function onCommandHandler (target, context, commandName, client) {
 
             // Handles selectPokemon command
             } else if (rePokemon.exec(commandName)[3]) {
-                console.log(rePokemon.exec(commandName));
-
                 const trainerId = { trainerId: context['user-id'] };
 
+                // Get trainer info
                 const trainer = await PokemonModel.findOne(trainerId);
 
                 const requestedPokemon = trainer.pokemon.find(pokemon => pokemon.name.toLowerCase() === commandName.split(' ')[1].toLowerCase());
-                const selectedPokemon = trainer.selectedPokemon;
+                let selectedPokemon = trainer.selectedPokemon;
 
                 // If trainer does not have the requested pokemon, then return
                 if (requestedPokemon === undefined) { return; }
 
-                console.log(selectedPokemon);
-                console.log(requestedPokemon);
-
-
-                // console.log(`Testing select pokemon: ${trainer.pokemon.find(pokemon => pokemon._id == requestedPokemon._id)}`);
-
+                // If no pokemon selected, assign requested pokemon as selected
+                if (selectedPokemon.name === null) { 
+                    selectedPokemon = requestedPokemon; 
+                    return;
+                }
                 
                 // Check if the trainer already has requested pokemon selected
                 if (requestedPokemon.name != selectedPokemon.name) {
 
                     const findPokemon = trainer.pokemon.find(pokemon => pokemon.name === selectedPokemon.name);
-                    console.log(findPokemon);
-
-                    // Person.update(
-                    //     {
-                    //       _id: 5,
-                    //       grades: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
-                    //     },
-                    //     { $set: { "grades.$.std" : 6 } }
-                    //  )
-
 
                     // This somehow updates the wins of the pokemon whenever a new selectedPokemon is chosen
-                    const result = await PokemonModel.findOneAndUpdate({trainerId: context['user-id'], pokemon: { $elemMatch: { name:  findPokemon.name, _id: findPokemon._id }}}, { $set: { "pokemon.$.wins" : selectedPokemon.wins }});
-                    console.log(result);
+                    const result = await PokemonModel.findOneAndUpdate({trainerId: context['user-id'], pokemon: { $elemMatch: { name: findPokemon.name }}}, { $set: { "pokemon.$.wins" : selectedPokemon.wins }});
 
-                    const resultSelected = await PokemonModel.updateOne(trainerId, { $set: { selectedPokemon: requestedPokemon }}, options);
-                    // console.log(resultSelected);
+                    await PokemonModel.updateOne(trainerId, { selectedPokemon: requestedPokemon });
                 }
 
             // Handles !catch pokemon command

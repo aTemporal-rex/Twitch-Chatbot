@@ -63,6 +63,18 @@ function generatePokemon (pokemons) {
     }
 }
 
+function evolve(pokemon) {
+    const pokemonArray = evolutions.data.gen1_species.find(pokemonArray => pokemonArray.includes(pokemon));
+    console.log(pokemonArray);
+
+    const index = pokemonArray.indexOf(pokemon);
+
+    const evolution = pokemonArray[++index];
+    console.log(evolution);
+
+    return evolution;
+}
+
 function getChosenPokemon() {
     return chosenPokemon;
 }
