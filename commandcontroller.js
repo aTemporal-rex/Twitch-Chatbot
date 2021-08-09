@@ -31,7 +31,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
       rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
       reFart = /^!fart [\w]+$/i,
-      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
+      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^!fart [\w]+$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
@@ -161,13 +161,15 @@ async function onCommandHandler (target, context, commandName, client) {
             const result = await CommandModel.findOneAndUpdate(filter, {$pull: alias}, {new: true});
             logCommand(commandName, result);
 
-        } else if (reFart.test(commandName)) {
+        } 
+        // else if (reFart.test(commandName)) {
 
-            const fart = farts[Math.floor(Math.random() * farts.length)];
-            const fartTarget = commandName.split(' ')[1];
-            client.say(target, `*${fart}* UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
+        //     const fart = farts[Math.floor(Math.random() * farts.length)];
+        //     const fartTarget = commandName.split(' ')[1];
+        //     client.say(target, `*${fart}* UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
 
-        } else if (rePokemon.test(commandName)) {
+        // } 
+        else if (rePokemon.test(commandName)) {
 
             // Handle !startpokemon command
             if (commandName.toLowerCase() === '!startpokemon' && ADMIN_PERMISSION) {
