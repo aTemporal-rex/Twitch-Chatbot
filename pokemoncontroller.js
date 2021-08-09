@@ -1,5 +1,7 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
 const { getQuery } = require('./querygetter');
+const PokemonModel = require('./pokemon');
+require('dotenv').config();
 
 const rareChance = 0.01;
 let chosenPokemon, pokemons, evolutions,
@@ -75,6 +77,24 @@ function evolve(pokemon) {
     return evolution;
 }
 
+async function onDuel(context) {
+    setTimeout(() => {
+        ;
+    }, 30000);
+
+}
+
+async function checkDuelResult(context, msg) {
+    if (context.username === process.env.CHANNEL_NAME.toLowerCase()) {
+        if (/Congratulations to @[\w]+ for winning the duel!/.test(msg)) {
+            const trainer = msg.split(' ').slice(2, 3)[0].replace('@', '');
+            console.log(trainer);
+            await PokemonModel.findOneAndUpdate({ trainerId: context['user-id'] }, { $inc: { "selectedPokemon.wins": 1 } });
+            return true;
+        }
+    }
+}
+
 function getChosenPokemon() {
     return chosenPokemon;
 }
@@ -134,6 +154,9 @@ async function handleError(error) {
 
 module.exports = {
     getChosenPokemon,
+    evolve,
+    onDuel,
+    checkDuelResult,
     startPokemon,
     stopPokemon
 };

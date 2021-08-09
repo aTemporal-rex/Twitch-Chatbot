@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const { onCommandHandler } = require('./commandcontroller');
 const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
-const { startPokemon } = require('./pokemoncontroller');
+const { checkDuelResult } = require('./pokemoncontroller');
 const db = require('./db');
 require('dotenv').config();
 
@@ -13,7 +13,7 @@ const app = express();
 app.use(helmet());
 
 const emoticons = ['LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm']; // Initializing with some popular global emotes
-let sneeze = false;
+let sneeze = false, duel = false;
 
 // Define configuration options
 const opts = {
@@ -52,6 +52,8 @@ async function onMessageHandler (target, context, msg, self) {
     // If bot hasn't sneezed, it attempts to sneeze with a 0.1% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
     if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
+
+    if (duel === true) { duel = checkDuelResult(context, msg) }
 
     // Check if msg is a command
     if (msg.startsWith('!')) {

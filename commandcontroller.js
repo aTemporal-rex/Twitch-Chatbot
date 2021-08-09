@@ -3,7 +3,7 @@ const PokemonModel = require('./pokemon');
 const { onQueueHandler } = require('./queuecontroller');
 const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
-const { getChosenPokemon, startPokemon, stopPokemon } = require('./pokemoncontroller');
+const { getChosenPokemon, evolve, onDuel, startPokemon, stopPokemon } = require('./pokemoncontroller');
 const { getAnime } = require('./animesgetter');
 const { getManga } = require('./mangasgetter');
 const { getPageCount } = require('./pagegetter');
@@ -29,12 +29,15 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reDeath = /^!death ?\d{0,3}$|^(!dcount|!deathcount)$/i,
-      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)/i,
+      rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
+      reFart = /^!fart [\w]+$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
     averageScore, nIntervId, pokeIntervId, chosenPokemon;
+
+const farts = ['PFFT', 'FRAAAP', 'POOT', 'BLAT', 'THPPTPHTPHPHHPH', 'BRAAAP', 'BRAAAACK', 'FRRRT', 'BLAAARP', 'PBBBBT']
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -157,6 +160,12 @@ async function onCommandHandler (target, context, commandName, client) {
             const result = await CommandModel.findOneAndUpdate(filter, {$pull: alias}, {new: true});
             logCommand(commandName, result);
 
+        } else if (reFart.test(commandName)) {
+            
+            const fart = farts[Math.floor(Math.random() * array.length)];
+            const fartTarget = commandName.split(' ')[1];
+            client.say(target, `${fart} UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
+
         } else if (rePokemon.test(commandName)) {
 
             // Handle !startpokemon command
@@ -234,9 +243,49 @@ async function onCommandHandler (target, context, commandName, client) {
                     const findPokemon = trainer.pokemon.find(pokemon => pokemon.name === selectedPokemon.name);
 
                     // This somehow updates the wins of the pokemon whenever a new selectedPokemon is chosen
-                    const result = await PokemonModel.findOneAndUpdate({trainerId: context['user-id'], pokemon: { $elemMatch: { name: findPokemon.name }}}, { $set: { "pokemon.$.wins" : selectedPokemon.wins }});
+                    await PokemonModel.findOneAndUpdate({trainerId: context['user-id'], pokemon: { $elemMatch: { name: findPokemon.name }}}, { $set: { "pokemon.$.wins" : selectedPokemon.wins }});
 
+                    // Sets selectedPokemon equal to the requested pokemon
                     await PokemonModel.updateOne(trainerId, { selectedPokemon: requestedPokemon });
+                }
+
+
+            // Handles duels
+            } else if (rePokemon.exec(commandName)[4]) {
+                onDuel(context)
+
+            // Handles pokemon evolution
+            } else if (rePokemon.exec(commandName)[5]) {
+                const trainerId = { trainerId: context['user-id'] };
+
+                const trainer = await PokemonModel.findOne(trainerId);
+
+                const pokemon = trainer.pokemon.find(pokemon => pokemon.name.toLowerCase() === commandName.split(' ')[1].toLowerCase());
+
+                if (pokemon === undefined) { 
+                    return; 
+                } else if (pokemon.wins >= 5) {
+                    const evolvedPokemon = evolve(pokemon.name);
+
+                    if (evolvedPokemon) {
+                        client.say(target, `What? ${pokemon.name.toUpperCase()} is evolving!`);
+
+                        // Move this to pokemoncontroller.js since it doesn't need to be a command
+                        // setTimeout(function () {
+                        //     if (B pressed) {
+                        //         `Huh? ${pokemon.name.toUpperCase()} stopped evolving!`
+                        //     } else {
+                        //         `Congratulations! Your ${pokemon.name.toUpperCase()} evolved into ${evolvedPokemon}!`
+                        //     }
+                        // }, 10000);
+                        setTimeout(function () {
+                                if ((commandName === '!b' || commandName === '!B') && context['user-id'] === trainer.trainerId) {
+                                    client.say(target, `Huh? ${pokemon.name.toUpperCase()} stopped evolving!`);
+                                } else {
+                                    client.say(target, `Congratulations! Your ${pokemon.name.toUpperCase()} evolved into ${evolvedPokemon}!`);
+                                }
+                            }, 10000);
+                    }
                 }
 
             // Handles !catch pokemon command
