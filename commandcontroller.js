@@ -161,8 +161,8 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName, result);
 
         } else if (reFart.test(commandName)) {
-            
-            const fart = farts[Math.floor(Math.random() * array.length)];
+
+            const fart = farts[Math.floor(Math.random() * farts.length)];
             const fartTarget = commandName.split(' ')[1];
             client.say(target, `${fart} UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
 
