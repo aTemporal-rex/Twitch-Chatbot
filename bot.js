@@ -6,6 +6,7 @@ const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./emotecontroller');
 const { checkDuelResult } = require('./pokemoncontroller');
 const db = require('./db');
+const { onFartHandler } = require('./fartcontroller');
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
@@ -53,7 +54,9 @@ async function onMessageHandler (target, context, msg, self) {
     if (sneeze === false) { sneeze = initSneeze(target, client); }
     if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
-    if (duel === true) { duel = checkDuelResult(context, msg) }
+    if (duel === true) { duel = checkDuelResult(context, msg); }
+
+    onFartHandler(target, client, context);
 
     // Check if msg is a command
     if (msg.startsWith('!')) {
@@ -64,7 +67,7 @@ async function onMessageHandler (target, context, msg, self) {
 
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
-    // await initEmotes(emoticons);
+    await initEmotes(emoticons);
 
     console.log(`* Connected to ${addr}:${port}`);
 
