@@ -37,7 +37,8 @@ let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean 
     animePageCount, mangaPageCount, avgScorePageCount, deathCount = 0,
     averageScore, nIntervId, pokeIntervId, chosenPokemon;
 
-const farts = ['PFFT', 'FRAAAP', 'POOT', 'BLAT', 'THPPTPHTPHPHHPH', 'BRAAAP', 'BRAAAACK', 'FRRRT', 'BLAAARP', 'PBBBBT']
+const farts = ['PFFT', 'FRAAAP', 'POOT', 'BLAT', 'THPPTPHTPHPHHPH', 'BRAAAP', 'BRAAAACK', 'FRRRT', 'BLAAARP', 'PBBBBT'];
+let fartCount = 0;
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -164,7 +165,7 @@ async function onCommandHandler (target, context, commandName, client) {
 
             const fart = farts[Math.floor(Math.random() * farts.length)];
             const fartTarget = commandName.split(' ')[1];
-            client.say(target, `${fart} UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
+            client.say(target, `*${fart}* UGH I'VE BEEN HOLDING THAT ONE ALL DAY, SORRY ${fartTarget}`);
 
         } else if (rePokemon.test(commandName)) {
 
