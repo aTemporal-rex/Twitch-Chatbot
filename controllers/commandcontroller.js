@@ -1,14 +1,14 @@
-const CommandModel = require('./command');
-const PokemonModel = require('./pokemon');
+const CommandModel = require('../models/command');
+const PokemonModel = require('../models/pokemon');
 const { onQueueHandler } = require('./queuecontroller');
 const { onLoopHandler } = require('./loopcontroller');
 const { tellJoke } = require('./jokecontroller');
 const { getChosenPokemon, evolve, onDuel, startPokemon, stopPokemon } = require('./pokemoncontroller');
-const { getAnime } = require('./animesgetter');
-const { getManga } = require('./mangasgetter');
-const { getPageCount } = require('./pagegetter');
-const db = require('./db');
-const pokemon = require('./pokemon');
+const { getAnime } = require('../animesgetter');
+const { getManga } = require('../mangasgetter');
+const { getPageCount } = require('../pagegetter');
+const db = require('../db');
+const pokemon = require('../models/pokemon');
 require('dotenv').config();
 
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };

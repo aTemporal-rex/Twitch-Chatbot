@@ -1,12 +1,12 @@
 const tmi = require('tmi.js');
 const express = require('express');
 const helmet = require("helmet");
-const { onCommandHandler } = require('./commandcontroller');
-const { onSneezeHandler, initSneeze } = require('./sneezecontroller');
-const { initEmotes, onEmoteHandler } = require('./emotecontroller');
-const { checkDuelResult } = require('./pokemoncontroller');
+const { onCommandHandler } = require('./controllers/commandcontroller');
+const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
+const { initEmotes, onEmoteHandler } = require('./controllers/emotecontroller');
+const { checkDuelResult } = require('./controllers/pokemoncontroller');
 const db = require('./db');
-const { onFartHandler } = require('./fartcontroller');
+const { onFartHandler } = require('./controllers/fartcontroller');
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
@@ -75,7 +75,7 @@ async function onConnectedHandler (addr, port) {
     client.color('HotPink');
 
     // Declare the glorious arrival of Bunni Senpai Bot
-    client.say(process.env.CHANNEL_NAME, 'Bunni Senpai has arrived! dittoDumper');
+    client.say(process.env.CHANNEL_NAME, 'HAPPY BIRTHDAY JACKIE!!! FeelsBirthdayMan');
 }
 
 // This is necessary to prevent heroku from disconnecting

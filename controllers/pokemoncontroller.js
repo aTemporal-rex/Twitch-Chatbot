@@ -1,6 +1,6 @@
 const fetch = require('node-fetch'); // Required to use fetch in node.js
-const { getQuery } = require('./querygetter');
-const PokemonModel = require('./pokemon');
+const { getQuery } = require('../querygetter');
+const PokemonModel = require('../models/pokemon');
 require('dotenv').config();
 
 const rareChance = 0.01;

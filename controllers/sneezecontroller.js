@@ -57,22 +57,22 @@ const initSneeze = (target, client) => {
 
         switch (sneezeData.language) {
             case 'English':
-                client.say(target, `/me *aaAACHOOOO* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *aaAACHOOOO* SNEEZE! (${sneezeData.language})`);
                 break;
             case 'French':
-                client.say(target, `/me *aaAATCHUMM* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *aaAATCHUMM* SNEEZE! (${sneezeData.language})`);
                 break;
             case 'German':
-                client.say(target, `/me *haAATSCHII* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *haAATSCHII* SNEEZE! (${sneezeData.language})`);
                 break;
             case 'Spanish':
-                client.say(target, `/me *aaAACHÚÚÚÚ* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *aaAACHÚÚÚÚ* SNEEZE! (${sneezeData.language})`);
                 break;
             case 'Swedish':
-                client.say(target, `/me *aaAATJOOOO* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *aaAATJOOOO* SNEEZE! (${sneezeData.language})`);
                 break;
             case 'Italian':
-                client.say(target, `/me *aaAACCIÙÙÙ* (${sneezeData.language})`);
+                client.say(target, `/me BIRTHDAY *aaAACCIÙÙÙ* SNEEZE! (${sneezeData.language})`);
                 break;
         }
 
