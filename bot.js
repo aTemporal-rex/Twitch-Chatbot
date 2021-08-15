@@ -13,7 +13,13 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(helmet());
 
-const emoticons = ['LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm']; // Initializing with some popular global emotes
+// Initializing with some popular global emotes, and sub emotes
+const emoticons = [
+    'LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm',  'jlastGuobafart', 'jlastGuobabutt', 'jlastMeltyangry', 'jlastHehe',
+    'jlastAngyxiangling', 'jlastGuoba', 'jlastYummy', 'jlastXiangIsFine', 'jlastMeaty', 'jlastIllegal', 'jlastBunnysenpai', 'jlastHype',
+    'jlastHammer', 'jlastSmug', 'jlastUsacry', 'jlastAnger'
+]; 
+
 let sneeze = false, duel = false;
 
 // Define configuration options
@@ -48,7 +54,7 @@ async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
 
     // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
-    onEmoteHandler(target, msg, client, emoticons);
+    onEmoteHandler(target, msg, client, new RegExp(emoticons.join('|'), 'g'));
 
     // If bot hasn't sneezed, it attempts to sneeze with a 0.1% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
@@ -75,7 +81,7 @@ async function onConnectedHandler (addr, port) {
     client.color('HotPink');
 
     // Declare the glorious arrival of Bunni Senpai Bot
-    client.say(process.env.CHANNEL_NAME, 'HAPPY BIRTHDAY JACKIE!!! FeelsBirthdayMan');
+    client.say(process.env.CHANNEL_NAME, 'Bunni Senpai has arrived! dittoDumper');
 }
 
 // This is necessary to prevent heroku from disconnecting

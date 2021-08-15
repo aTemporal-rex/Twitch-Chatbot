@@ -50,7 +50,7 @@ function onEmoteHandler (target, msg, client, emoticons) {
         const emoteCount = {};
 
         // Check to see if message included an emote, then get the emote from emoticons array
-        const emoticon = emoticons.find(emoticon => new RegExp('\\b' + emoticon + '\\b').exec(msg));
+        const emoticon = msg.match(emoticons);
 
         // Array that checks the last 5 messages
         emoticonChecker.push(emoticon);
@@ -63,9 +63,9 @@ function onEmoteHandler (target, msg, client, emoticons) {
 
         ++msgCounter; // Counter for number of messages being checked
 
-        // If emoteHype is not undefined, display the emote
+        // If emoteHype is not undefined, display the emote(s)
         if (emoteHype) {
-            client.say(target, emoteHype);
+            client.say(target, emoteHype.replace(/,/g, ' '));
             clearEmoteChecker();
         } else if (emoticonChecker.length === NUM_MSG_CHECK) {
             clearEmoteChecker();
