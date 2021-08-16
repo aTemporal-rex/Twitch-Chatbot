@@ -63,8 +63,9 @@ function onEmoteHandler (target, msg, client, emoticons) {
 
         ++msgCounter; // Counter for number of messages being checked
 
+        console.log(emoteHype);
         // If emoteHype is not undefined, display the emote(s)
-        if (emoteHype) {
+        if (emoteHype && emoteHype != 'null') {
             client.say(target, emoteHype.replace(/,/g, ' '));
             clearEmoteChecker();
         } else if (emoticonChecker.length === NUM_MSG_CHECK) {
