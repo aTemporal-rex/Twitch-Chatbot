@@ -59,7 +59,7 @@ function onEmoteHandler (target, msg, client, emoticons) {
         emoticonChecker.forEach(emoticon => { emoteCount[emoticon] = (emoteCount[emoticon] || 0) + 1; });
 
         // Checking if an emote reaches over 3 occurrences in the past NUM_MSG_CHECK msgs
-        const emoteHype = Object.keys(emoteCount).find(emoticon => emoteCount[emoticon] >= 3 && emoticon != 'undefined');
+        const emoteHype = Object.keys(emoteCount).find(emoticon => emoteCount[emoticon] >= 3 && emoticon != 'undefined' && emoticon != 'null');
 
         ++msgCounter; // Counter for number of messages being checked
 
