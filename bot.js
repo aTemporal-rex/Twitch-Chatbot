@@ -13,6 +13,8 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(helmet());
 
+const reUserBan = /^hoss/;
+
 // Initializing with some popular global emotes, and sub emotes
 const emoticons = [
     'LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm',  'jlastGuobafart', 'jlastGuobabutt', 'jlastMeltyangry', 'jlastHehe',
@@ -52,6 +54,10 @@ client.connect();
 // Called every time a message comes in
 async function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignores messages from the bot
+
+    if (reUserBan.test(context.username) || context.username === 'buuurn1') { 
+        client.say(target, `/ban ${context.username}`);
+    }
 
     // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
     onEmoteHandler(target, msg, client, new RegExp(emoticons.join('|'), 'g'));
