@@ -60,7 +60,7 @@ async function onMessageHandler (target, context, msg, self) {
         client.say(target, `/ban ${context.username}`);
     }
 
-    if (context.username === 'buuurn1'){
+    if (context.username === 'streamlabs'){
         if (reStreamlabs.test(msg)) {
             const userToBan = msg.split(' ')[4].split('!')[0];
             client.say(target, `/ban ${userToBan}`)
