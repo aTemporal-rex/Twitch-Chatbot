@@ -13,8 +13,8 @@ const port = process.env.PORT || 3000;
 const app = express();
 app.use(helmet());
 
-const reUserBan = /^hoss|^ho.*ss/,
-      reStreamlabs = /Thank you for following hoss|Thank you for following ho.*ss/;
+const reUserBan = /^hoss|^ho.*ss|^pi[A-Za-z]{6,}/,
+      reStreamlabs = /Thank you for following hoss|Thank you for following ho.*ss|Thank you for following pi[A-Za-z]{6,}/;
 
 // Initializing with some popular global emotes, and sub emotes
 const emoticons = [
