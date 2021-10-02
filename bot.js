@@ -5,6 +5,7 @@ const { onCommandHandler } = require('./controllers/commandcontroller');
 const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./controllers/emotecontroller');
 const { checkDuelResult } = require('./controllers/pokemoncontroller');
+const { initScare } = require('./controllers/scarecontroller');
 const db = require('./db');
 const { onFartHandler } = require('./controllers/fartcontroller');
 require('dotenv').config();
@@ -69,6 +70,8 @@ async function onMessageHandler (target, context, msg, self) {
 
     // Responds to emote hype. If last NUM_MSG_CHECK msgs contain at least 3 of the same emote, then contribute to the hype
     onEmoteHandler(target, msg, client, new RegExp(emoticons.join('|'), 'g'));
+
+    await initScare(target, client, context);
 
     // If bot hasn't sneezed, it attempts to sneeze with a 0.1% chance per message
     if (sneeze === false) { sneeze = initSneeze(target, client); }
