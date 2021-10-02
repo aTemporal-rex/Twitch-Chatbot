@@ -376,16 +376,16 @@ async function onCommandHandler (target, context, commandName, client) {
             if (countCommand[1]) {
 
                 if (deathCount === 0) { return; }
-                client.say(target, `Times Jackie felt the halloween spirit: ${deathCount} AUGH`);
-                console.log(`Times Jackie felt the halloween spirit: ${deathCount}`);
+                client.say(target, `Ded count: ${deathCount} AUGH`);
+                console.log(`Ded count: ${deathCount}`);
 
             } else if (ADMIN_PERMISSION) {
 
                 // Replace non digits with empty string, then check if string is empty
                 if (commandName.replace(/\D/g, '').length === 0) { 
                     ++deathCount;
-                    client.say(target, `Times Jackie felt the halloween spirit: ${deathCount} AUGH`);
-                    console.log(`Times Jackie felt the halloween spirit: ${deathCount}`);
+                    client.say(target, `Ded count: ${deathCount} AUGH`);
+                    console.log(`Ded count: ${deathCount}`);
                 }
                 else { 
                     deathCount = commandName.replace(/\D/g, '');
