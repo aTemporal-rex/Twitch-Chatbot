@@ -29,11 +29,12 @@ const reMedia = /^!anime$|^!manga$/i,
       reLoop = /^!loop ?\d{1,2} [\w\W]*$/i,
       reEndLoop = /^!endloop$/i,
       reSpook = /^!spook ?\d{0,3}$|^!scare ?\d{0,3}$|^(!scount|!spookcount|!scarecount)$/i,
+      reDeath = /^!death ?\d{0,3}$|^!ded ?\d{0,3}$|^(!dcount|!deathcount|!dedcount)$/i,
       rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
-    animePageCount, mangaPageCount, avgScorePageCount, scareCount = 0,
+    animePageCount, mangaPageCount, avgScorePageCount, scareCount = 0, deathCount = 0,
     averageScore, nIntervId, pokeIntervId, chosenPokemon;
 
 
@@ -355,6 +356,8 @@ async function onCommandHandler (target, context, commandName, client) {
                 // Replace non digits with empty string, then check if string is empty
                 if (commandName.replace(/\D/g, '').length === 0) { 
                     ++scareCount;
+                    client.say(target, `Times Jackie felt the halloween spirit: ${scareCount} AUGH`);
+                    console.log(`Times Jackie felt the halloween spirit: ${scareCount}`);
                 }
                 else { 
                     scareCount = commandName.replace(/\D/g, '');
@@ -362,6 +365,34 @@ async function onCommandHandler (target, context, commandName, client) {
                 
                 // client.say(target, `spook count (${deathCount})`);
                 console.log(`spook count be goin up (${scareCount})`);
+            }
+
+        } else if (reDeath.test(commandName)) {
+
+            // Used to determine if command given is either !dcount or !deathcount
+            const countCommand = reDeath.exec(commandName);
+
+            // countCommand[1] is undefined unless command given is part of grouped commands
+            if (countCommand[1]) {
+
+                if (deathCount === 0) { return; }
+                client.say(target, `Times Jackie felt the halloween spirit: ${deathCount} AUGH`);
+                console.log(`Times Jackie felt the halloween spirit: ${deathCount}`);
+
+            } else if (ADMIN_PERMISSION) {
+
+                // Replace non digits with empty string, then check if string is empty
+                if (commandName.replace(/\D/g, '').length === 0) { 
+                    ++deathCount;
+                    client.say(target, `Times Jackie felt the halloween spirit: ${deathCount} AUGH`);
+                    console.log(`Times Jackie felt the halloween spirit: ${deathCount}`);
+                }
+                else { 
+                    deathCount = commandName.replace(/\D/g, '');
+                }
+                
+                // client.say(target, `spook count (${deathCount})`);
+                console.log(`spook count be goin up (${deathCount})`);
             }
 
         } else if (reSimple.test(commandName)) {
