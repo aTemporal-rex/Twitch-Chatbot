@@ -307,7 +307,13 @@ async function onCommandHandler (target, context, commandName, client) {
             const sides = commandName.split(' ')[1].replace(/\D/g, '');
             const num = rollDice(sides);
 
-            client.say(target, `${context['display-name']} rolled a ${num}! Congrats, you win nothing!`);
+            if (num === 69) {
+                client.say(target, `${context['display-name']} rolled a ${num}! Nice.`);
+            } else if (num === 420) {
+                client.say(target, `${context['display-name']} rolled a ${num}! Blaze it`);
+            } else {
+                client.say(target, `${context['display-name']} rolled a ${num}! Congrats, you win nothing!`);
+            }
 
         } else if (reJoke.test(commandName)) {
 
