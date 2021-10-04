@@ -318,6 +318,8 @@ async function onCommandHandler (target, context, commandName, client) {
                 client.say(target, `${context['display-name']} rolled a ${num}! Nice.`);
             } else if (num === 420) {
                 client.say(target, `${context['display-name']} rolled a ${num}! Blaze it`);
+            } else if (num === 1) {
+                client.say(target, `${context['display-name']} rolled a ${num}! Are you trying to roleplay as Jackie rn? jlastHehe`);
             } else {
                 client.say(target, `${context['display-name']} rolled a ${num}! Congrats, you win nothing!`);
             }
