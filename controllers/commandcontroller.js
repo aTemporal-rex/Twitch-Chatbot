@@ -33,7 +33,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reDeath = /^!death ?\d{0,3}$|^!ded ?\d{0,3}$|^(!dcount|!deathcount|!dedcount)$/i,
       rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
       reDice = /^!roll d\d\d?\d?$/i,
-      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
+      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^!roll d\d\d?\d?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, scareCount = 0, deathCount = 0,
