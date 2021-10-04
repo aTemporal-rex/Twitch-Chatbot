@@ -7,6 +7,7 @@ const { getChosenPokemon, evolve, onDuel, startPokemon, stopPokemon } = require(
 const { getAnime } = require('../animesgetter');
 const { getManga } = require('../mangasgetter');
 const { getPageCount } = require('../pagegetter');
+const { rollDice } = require('./rolldice');
 const db = require('../db');
 const pokemon = require('../models/pokemon');
 require('dotenv').config();
@@ -31,6 +32,7 @@ const reMedia = /^!anime$|^!manga$/i,
       reSpook = /^!spook ?\d{0,3}$|^!scare ?\d{0,3}$|^(!scount|!spookcount|!scarecount)$/i,
       reDeath = /^!death ?\d{0,3}$|^!ded ?\d{0,3}$|^(!dcount|!deathcount|!dedcount)$/i,
       rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
+      reDice = /^!roll d\d\d?\d?$/i,
       reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
 let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
@@ -300,6 +302,12 @@ async function onCommandHandler (target, context, commandName, client) {
                 }
 
             }
+
+        } else if (reDice.test(commandName)) {
+            const sides = commandName.split(' ')[1].replace(/\D/g, '');
+            const num = rollDice(sides);
+
+            client.say(target, `${context['display-name']} rolled a ${num}! Congrats, you win nothing!`);
 
         } else if (reJoke.test(commandName)) {
 
