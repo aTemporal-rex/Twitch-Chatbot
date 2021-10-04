@@ -306,6 +306,12 @@ async function onCommandHandler (target, context, commandName, client) {
 
         } else if (reDice.test(commandName)) {
             const sides = commandName.split(' ')[1].replace(/\D/g, '');
+
+            if (sides === 0) { 
+                client.say(target, `PeepoCandy`);
+                return;
+            }
+
             const num = rollDice(sides);
 
             if (num === 69) {
