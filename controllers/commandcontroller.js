@@ -15,6 +15,7 @@ require('dotenv').config();
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const cooldown = 4000, // Command cooldown in milliseconds
+      rollCooldown = 10000;
       jokeCooldown = 40000;
 
 const reMedia = /^!anime$|^!manga$/i,
@@ -33,9 +34,9 @@ const reMedia = /^!anime$|^!manga$/i,
       reDeath = /^!death ?\d{0,3}$|^!ded ?\d{0,3}$|^(!dcount|!deathcount|!dedcount)$/i,
       rePokemon = /^!catch [\w]+$|^!startpokemon$|^(!mypokemons?|!mypokes)$|^(!endpokemon|!stoppokemon)$|^(!avatars? [\w]+)|^(!duel [\w]+)|^(!evolve [\w]+)/i,
       reDice = /^!roll d\d\d?\d?$/i,
-      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$|^!roll d\d\d?\d?$/i;
+      reCheck = /^!anime?$|^!manga?$|^!anime ?[0-9]{1,2}?$|^!manga ?[0-9]{1,2}?$/i;
       
-let cmdOnCooldown = false, jokeOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
+let cmdOnCooldown = false, jokeOnCooldown = false, rollOnCooldown = false, cmdFound = false, // Boolean to check if command is on cooldown, as well as if cmd is found
     animePageCount, mangaPageCount, avgScorePageCount, scareCount = 0, deathCount = 0,
     averageScore, nIntervId, pokeIntervId, chosenPokemon;
 
@@ -449,7 +450,18 @@ const onCooldown = (commandName, context) => {
             setTimeout(() => { jokeOnCooldown = false; }, jokeCooldown);
         }
     
-    } else if (reCheck.test(commandName)) {
+    } if (reDice.test(commandName)) {
+
+        if (rollOnCooldown) {
+            console.log('Command is on cooldown');
+            return true;
+        } else {
+            rollOnCooldown = true;
+            setTimeout(() => { rollOnCooldown = false; }, rollCooldown);
+        }
+    
+    }
+    else if (reCheck.test(commandName)) {
 
         if (cmdOnCooldown) {
             console.log('Command is on cooldown');
