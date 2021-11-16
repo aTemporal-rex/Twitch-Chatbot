@@ -308,7 +308,7 @@ async function onCommandHandler (target, context, commandName, client) {
             const sides = commandName.split(' ')[1].replace(/\D/g, '');
 
             if (sides == 0) { 
-                client.say(target, `PeepoCandy`);
+                client.say(target, `peepoSnow`);
                 return;
             }
 
@@ -320,6 +320,8 @@ async function onCommandHandler (target, context, commandName, client) {
                 client.say(target, `${context['display-name']} rolled a ${num}! Blaze it`);
             } else if (num === 1) {
                 client.say(target, `${context['display-name']} rolled a ${num}! Are you trying to roleplay as Jackie rn? jlastHehe`);
+            } else if (num === 999) {
+                client.say(target, `${context['display-name']} rolled a ${num}! Secret ultra prize PADORUdefault`);
             } else {
                 client.say(target, `${context['display-name']} rolled a ${num}! Congrats, you win nothing!`);
             }
