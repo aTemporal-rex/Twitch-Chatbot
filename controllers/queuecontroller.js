@@ -70,6 +70,9 @@ function onQueueHandler (target, context, commandName, client) {
         case '!bjoin':
             onJoinQueue(user);
             break;
+        case '!join':
+            onJoinQueue(user);
+            break;
         case '!bpos':
             getPosition(target, client, user);
             break;
