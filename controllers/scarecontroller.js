@@ -20,7 +20,8 @@ const initScare = (target, client, context) => {
     // Every 10 minutes there is a 0.1% chance for the bot to sneeze in the given language
     if (Math.random() <= CHANCE) {
         // const words = await getRandomWords();
-        client.say(target, `/me ${getOnomatopoeia()}! Jeez ${context['display-name']} you scared me! jlastAngyxiangling `);
+        //client.say(target, `/me ${getOnomatopoeia()}! Jeez ${context['display-name']} you scared me! jlastAngyxiangling `);
+        client.say(target, `/me HAPPY NEW YEARS! ${context['display-name']} jlastHype`);
     }
 }
 
