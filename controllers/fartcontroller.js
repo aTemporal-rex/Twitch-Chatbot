@@ -6,7 +6,7 @@ function onFartHandler(target, client, context) {
     if (Math.random() <= CHANCE) {
         const fart = farts[Math.floor(Math.random() * farts.length)];
         const fartTarget = context['display-name'];
-        client.say(target, `*${fart}* jlastGuobafart Sorry ${fartTarget}, New Years burger make me gassy! widepeepoHappy`);
+        client.say(target, `*${fart}* jlastGuobafart Sorry ${fartTarget}, BunniSenpai is feeling gassy today! widepeepoHappy`);
     }
 }
 

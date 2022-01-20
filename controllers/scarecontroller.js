@@ -21,7 +21,7 @@ const initScare = (target, client, context) => {
     if (Math.random() <= CHANCE) {
         // const words = await getRandomWords();
         //client.say(target, `/me ${getOnomatopoeia()}! Jeez ${context['display-name']} you scared me! jlastAngyxiangling `);
-        client.say(target, `/me HAPPY NEW YEARS! ${context['display-name']} jlastHype`);
+        client.say(target, `/me Hallo${context['display-name']}! GuobaHi`);
     }
 }
 
