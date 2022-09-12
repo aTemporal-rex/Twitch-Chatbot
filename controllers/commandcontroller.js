@@ -56,6 +56,8 @@ const getPageCountAvgScore = async (mediaType) => {
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
     const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
+
+    console.log(context['room-id']);
     
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
