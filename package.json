@@ -15,7 +15,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.14",
     "node-fetch": "^2.6.7",
-    "passport": "^0.4.1",
+    "passport": "^0.6.0",
     "request": "^2.88.2",
     "tmi.js": "^1.8.5"
   },
