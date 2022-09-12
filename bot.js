@@ -2,12 +2,12 @@ const tmi = require('tmi.js');
 const express = require('express');
 const helmet = require("helmet");
 const { onCommandHandler } = require('./controllers/commandcontroller');
-// const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
+const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./controllers/emotecontroller');
 const { checkDuelResult } = require('./controllers/pokemoncontroller');
 const { initScare } = require('./controllers/scarecontroller');
 const db = require('./db');
-// const { onFartHandler } = require('./controllers/fartcontroller');
+const { onFartHandler } = require('./controllers/fartcontroller');
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
@@ -19,12 +19,12 @@ const reUserBan = /^hoss$|^ho.*ss$|^gun[A-Za-z]\d$|^gu[A-Za-z]{6}$/,
 
 // Initializing with some popular global emotes, and sub emotes
 const emoticons = [
-    'LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm',  'jlastGuobafart', 'jlastGuobabutt', 'jlastMeltyangry', 'jlastHehe',
+    'LUL', 'PogChamp', 'HeyGuys', 'DansGame', '4Head', 'Kreygasm', 'jlastGuobabutt', 'jlastMeltyangry', 'jlastHehe',
     'jlastAngyxiangling', 'jlastGuoba', 'jlastYummy', 'jlastXiangIsFine', 'jlastMeaty', 'jlastIllegal', 'jlastBunnysenpai', 'jlastHype',
     'jlastHammer', 'jlastSmug', 'jlastUsacry', 'jlastAnger'
 ]; 
 
-let sneeze = false, duel = false;
+// let sneeze = false, duel = false;
 
 // Define configuration options
 const opts = {
@@ -74,12 +74,12 @@ async function onMessageHandler (target, context, msg, self) {
     initScare(target, client, context);
 
     // If bot hasn't sneezed, it attempts to sneeze with a 0.1% chance per message
-    if (sneeze === false) { sneeze = initSneeze(target, client); }
-    if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
+    // if (sneeze === false) { sneeze = initSneeze(target, client); }
+    // if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
     if (duel === true) { duel = checkDuelResult(context, msg); }
 
-    onFartHandler(target, client, context);
+    // onFartHandler(target, client, context);
 
     // Check if msg is a command
     if (msg.startsWith('!')) {
