@@ -77,7 +77,7 @@ async function onMessageHandler (target, context, msg, self) {
     // if (sneeze === false) { sneeze = initSneeze(target, client); }
     // if (sneeze === true) { sneeze = onSneezeHandler(target, msg, client); }
 
-    if (duel === true) { duel = checkDuelResult(context, msg); }
+    // if (duel === true) { duel = checkDuelResult(context, msg); }
 
     // onFartHandler(target, client, context);
 
