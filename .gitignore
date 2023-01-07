@@ -6,3 +6,8 @@
 .vscode
 index.js
 user.js
+GUI/images
+GUI/dist
+GUI/build
+GUI/__pycache__
+BunniSenpaiBot.spec

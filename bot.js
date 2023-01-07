@@ -1,13 +1,13 @@
 const tmi = require('tmi.js');
 const express = require('express');
 const helmet = require("helmet");
-const { onCommandHandler } = require('./controllers/commandcontroller');
-const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
+const { onCommandHandler, getCommands } = require('./controllers/commandcontroller');
+// const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./controllers/emotecontroller');
-const { checkDuelResult } = require('./controllers/pokemoncontroller');
+// const { checkDuelResult } = require('./controllers/pokemoncontroller');
 const { initScare } = require('./controllers/scarecontroller');
 const db = require('./db');
-const { onFartHandler } = require('./controllers/fartcontroller');
+// const { onFartHandler } = require('./controllers/fartcontroller');
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
@@ -91,6 +91,7 @@ async function onMessageHandler (target, context, msg, self) {
 // Called everytime the bot connects to Twitch chat
 async function onConnectedHandler (addr, port) {
     await initEmotes(emoticons);
+    await getCommands();
 
     console.log(`* Connected to ${addr}:${port}`);
 

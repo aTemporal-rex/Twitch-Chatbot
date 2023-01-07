@@ -9,13 +9,15 @@ const { getManga } = require('../mangasgetter');
 const { getPageCount } = require('../pagegetter');
 const { rollDice } = require('./rolldice');
 const db = require('../db');
-const pokemon = require('../models/pokemon');
+// const pokemon = require('../models/pokemon');
+const { get } = require('request');
+// const { setTimeout } = require('node:timers/promises');
 require('dotenv').config();
 
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
 
 const cooldown = 4000, // Command cooldown in milliseconds
-      rollCooldown = 10000;
+      rollCooldown = 10000,
       jokeCooldown = 40000;
 
 const reMedia = /^!anime$|^!manga$/i,
@@ -40,6 +42,55 @@ let cmdOnCooldown = false, jokeOnCooldown = false, rollOnCooldown = false, cmdFo
     animePageCount, mangaPageCount, avgScorePageCount, scareCount = 0, deathCount = 0,
     averageScore, nIntervId, pokeIntervId, chosenPokemon;
 
+const commands = [];
+
+// Whenever the commands collection is changed, it triggers this event that updates the local commands array
+// TODO Add handling for deleted command
+const commandEventEmitter = CommandModel.watch();
+commandEventEmitter.on('change', change => {
+    changeJson = change;
+    try {
+
+        if (changeJson.operationType == "insert") {
+            console.log("**Document was inserted**");
+
+            // Add new document to local commands array
+            commands.push(changeJson.fullDocument);
+    
+        } else if (changeJson.operationType == "update") {
+            console.log("**Document was updated**");
+    
+            // Get index of updated command from local array
+            cmdIndex = commands.findIndex(command => command._id.toString() == changeJson.documentKey._id.toString());
+    
+            // Update each value locally that was changed in the database
+            Object.keys(changeJson.updateDescription.updatedFields).forEach(key => {
+                commands[cmdIndex][`${key}`] = changeJson.updateDescription.updatedFields[`${key}`]
+            });  
+        }
+        
+    } catch (err) {
+        console.error(err);
+    }
+    
+    console.log(change);
+});
+
+async function getCommands() {
+    cmds = await CommandModel.find();
+    cmds.forEach(command => 
+        commands.push({
+            _id: command._id,
+            name: command.name,
+            response: command.response,
+            permission: command.permission,
+            cooldown: command.cooldown,
+            onCooldown: command.onCooldown,
+            alias: command.alias
+        })
+    );
+    return commands;
+}
 
 // Get total number of pages for the total list of manga and anime
 const getPageCounts = async () => {
@@ -56,7 +107,7 @@ const getPageCountAvgScore = async (mediaType) => {
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
     const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
-    
+
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
         await getPageCounts();
@@ -331,8 +382,7 @@ async function onCommandHandler (target, context, commandName, client) {
             logCommand(commandName);
             await tellJoke(target, client, commandName);
             
-        } 
-        else if (reQueue.test(commandName)) {
+        } else if (reQueue.test(commandName)) {
 
             logCommand(commandName);
             
@@ -428,11 +478,11 @@ async function onCommandHandler (target, context, commandName, client) {
 
             const result = await CommandModel.findOne(filter);
 
-            if (result) { client.say(target, `${result.response}`); }
             if (ADMIN_PERMISSION === false && result) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
-
+            if (dbOnCooldown(result, ADMIN_PERMISSION)) { return; } // Uses result of DB search to see if cooldown needs to be enabled
+            
+            if (result) { client.say(target, `${result.response}`); }
             logCommand(commandName, result);
-            onCooldown(commandName, ADMIN_PERMISSION); // Uses result of DB search to see if cooldown needs to be enabled
 
         } else {
             console.log(`* Unknown command ${commandName}`);
@@ -443,14 +493,45 @@ async function onCommandHandler (target, context, commandName, client) {
     }
 }
 
-const onCooldown = (commandName, context) => {
-    const ADMIN_PERMISSION = context;
+const dbOnCooldown = (command, context) => {
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
-    if (reQueue.test(commandName)) { return; } // Ignore cooldown for queue usage
+    if (reQueue.test(command.name)) { return; } // Ignore cooldown for queue usage
 
-    // Manages joke cooldown, and a global cooldown
-    if (reJoke.test(commandName)) {
+    if (reSimple.test(command.name)) {
+        const index = commands.findIndex(cmd => cmd.name === command.name)
+        if (commands[index].onCooldown) {
+            console.log('Command is on cooldown');
+            return true;
+        } else {
+            // If command is found, enable command cooldown and reset cmdFound to false
+            if (cmdFound) {
+                // Set cooldown of command in local array to true
+                commands[index].onCooldown = true;
+                cmdFound = false;
+                
+                // Set onCooldown for this command to false after the assigned cooldown time
+                setTimeout(() => { commands[index].onCooldown = false }, command.cooldown);
+
+                return;
+            } else {
+                // If no command is found, then set cmdFound to false and return
+                cmdFound = false;
+                return;
+            }
+        }
+    }
+}
+
+const onCooldown = (command, context) => {
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
+
+    if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
+    if (reQueue.test(command)) { return; } // Ignore cooldown for queue usage
+
+    // Manages various cooldowns
+    if (reJoke.test(command)) {
 
         if (jokeOnCooldown) {
             console.log('Command is on cooldown');
@@ -459,8 +540,7 @@ const onCooldown = (commandName, context) => {
             jokeOnCooldown = true;
             setTimeout(() => { jokeOnCooldown = false; }, jokeCooldown);
         }
-    
-    } if (reDice.test(commandName)) {
+    } if (reDice.test(command)) {
 
         if (rollOnCooldown) {
             console.log('Command is on cooldown');
@@ -469,9 +549,8 @@ const onCooldown = (commandName, context) => {
             rollOnCooldown = true;
             setTimeout(() => { rollOnCooldown = false; }, rollCooldown);
         }
-    
     }
-    else if (reCheck.test(commandName)) {
+    else if (reCheck.test(command)) {
 
         if (cmdOnCooldown) {
             console.log('Command is on cooldown');
@@ -480,27 +559,40 @@ const onCooldown = (commandName, context) => {
             cmdOnCooldown = true;
             setTimeout(() => { cmdOnCooldown = false; }, cooldown);
         }
-
-    } else if (reSimple.test(commandName)) {
-
-        if (cmdOnCooldown) {
-            console.log('Command is on cooldown');
-            return true;
-        } else {
-
-            // If command is found, enable command cooldown and reset cmdFound to false
-            if (cmdFound) {
-                cmdOnCooldown = true;
-                cmdFound = false;
-                setTimeout(() => { cmdOnCooldown = false; }, cooldown);
-
-            // If no command is found, then set cmdFound to false and return
-            } else {
-                cmdFound = false;
-                return;
-            }
-        }
     }
+    else {
+        cmdFound = false; 
+        return false; 
+    }
+    //  else if (reSimple.test(command.name) || reSimple.test(command)) {
+    //     // console.log(command.name)
+    //     // console.log(command.cooldown)
+    //     console.log("Reached resimple old")
+    //     if (command.onCooldown) {
+    //         console.log('Command is on cooldown');
+    //         return true;
+    //     } else {
+
+    //         // If command is found, enable command cooldown and reset cmdFound to false
+    //         if (cmdFound) {
+    //             const filter = { name: command.name },
+    //                   setOffCooldown = { onCooldown: false },
+    //                   setOnCooldown = { onCooldown: true };
+
+    //             await CommandModel.findOneAndUpdate(filter, setOnCooldown, options)
+
+    //             // command.onCooldown = true;
+    //             cmdFound = false;
+                
+    //             await setTimeout(() => { CommandModel.findOneAndUpdate(filter, setOffCooldown, options) }, command.cooldown);
+
+    //         // If no command is found, then set cmdFound to false and return
+    //         } else {
+    //             cmdFound = false;
+    //             return;
+    //         }
+    //     }
+    // }
 }
 
 // Logs the inputted command depending on what type of command it is
@@ -516,5 +608,6 @@ const logCommand = (commandName, result) => {
 }
 
 module.exports = {
-    onCommandHandler
+    onCommandHandler,
+    getCommands
 };
