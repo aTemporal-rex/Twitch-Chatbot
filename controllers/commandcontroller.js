@@ -51,14 +51,14 @@ commandEventEmitter.on('change', change => {
     changeJson = change;
     try {
 
-        if (changeJson.operationType == "insert") {
-            console.log("**Document was inserted**");
+        if (changeJson.operationType === "insert") {
+            console.log("\n** Document Inserted **");
 
             // Add new document to local commands array
             commands.push(changeJson.fullDocument);
     
-        } else if (changeJson.operationType == "update") {
-            console.log("**Document was updated**");
+        } else if (changeJson.operationType === "update") {
+            console.log("\n** Document Updated **");
     
             // Get index of updated command from local array
             cmdIndex = commands.findIndex(command => command._id.toString() == changeJson.documentKey._id.toString());
@@ -67,6 +67,14 @@ commandEventEmitter.on('change', change => {
             Object.keys(changeJson.updateDescription.updatedFields).forEach(key => {
                 commands[cmdIndex][`${key}`] = changeJson.updateDescription.updatedFields[`${key}`]
             });  
+        } else if (changeJson.operationType === "delete") {
+            console.log("\n ** Document Deleted **");
+
+            // Get index of deleted command from local array
+            cmdIndex = commands.findIndex(command => command._id.toString() == changeJson.documentKey._id.toString());
+
+            // Remove command from commands array
+            commands.splice(cmdIndex, 1);
         }
         
     } catch (err) {
@@ -106,7 +114,8 @@ const getPageCountAvgScore = async (mediaType) => {
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
+    const userPermission = getPermission(context);
 
     // Initializes animePageCount and mangaPageCount if they are still undefined
     if (animePageCount === undefined || mangaPageCount === undefined) {
@@ -478,11 +487,19 @@ async function onCommandHandler (target, context, commandName, client) {
 
             const result = await CommandModel.findOne(filter);
 
-            if (ADMIN_PERMISSION === false && result) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
-            if (dbOnCooldown(result, ADMIN_PERMISSION)) { return; } // Uses result of DB search to see if cooldown needs to be enabled
-            
-            if (result) { client.say(target, `${result.response}`); }
-            logCommand(commandName, result);
+            const hasPermission = Object.keys(result.permission).some(key => result.permission[key] && userPermission[key]);
+            console.log(hasPermission)
+            console.log(JSON.stringify(commands[1].permission))
+
+            // If user has permission and command exists
+            if (hasPermission && result) {
+                if (ADMIN_PERMISSION === false) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
+                if (dbOnCooldown(result, ADMIN_PERMISSION)) { return; } // Uses result of DB search to see if cooldown needs to be enabled
+                client.say(target, `${result.response}`);
+
+                logCommand(commandName, result);
+            }
+            else { console.log('User does not have required permission!'); }
 
         } else {
             console.log(`* Unknown command ${commandName}`);
@@ -494,7 +511,7 @@ async function onCommandHandler (target, context, commandName, client) {
 }
 
 const dbOnCooldown = (command, context) => {
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(command.name)) { return; } // Ignore cooldown for queue usage
@@ -525,7 +542,7 @@ const dbOnCooldown = (command, context) => {
 }
 
 const onCooldown = (command, context) => {
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === 'BuuurN1' ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(command)) { return; } // Ignore cooldown for queue usage
@@ -593,6 +610,38 @@ const onCooldown = (command, context) => {
     //         }
     //     }
     // }
+}
+
+// Get's the users permission level anytime a command is attempted
+const getPermission = (context) => {
+    if (context['user-id'] === context['room-id']) {
+        return { 
+            Broadcaster: 1, 
+            Moderators: 1, 
+            Everyone: 1 
+        };
+    }
+    else if (context['display-name'] === process.env.DISPLAY_NAME) {
+        return { 
+            Broadcaster: 1, 
+            Moderators: 1, 
+            Everyone: 1 
+        };
+    }
+    else if (context.mod === true) { 
+        return { 
+            Broadcaster: 0, 
+            Moderators: 1, 
+            Everyone: 1 
+        };
+    }
+    else { 
+        return { 
+            Broadcaster: 0, 
+            Moderators: 0, 
+            Everyone: 1 
+        }; 
+    }
 }
 
 // Logs the inputted command depending on what type of command it is
