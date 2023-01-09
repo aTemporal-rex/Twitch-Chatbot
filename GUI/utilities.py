@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
 from themes import dark_theme,light_theme
 
-class Buttons:
+class ButtonLabel:
     def __init__(self, name, label, label_text, edit_button, delete_button):
         self.name = name
         self.label = label

@@ -4,7 +4,7 @@ from PIL import ImageTk,Image
 from tkinter import ttk
 from commands import get_commands,delete_command,edit_command,add_command,set_resource_location
 from themes import light_theme,dark_theme
-from buttons import Buttons
+from utilities import ButtonLabel
 from db import get_database
 import os
 
@@ -21,7 +21,12 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Set image location paths for command module
-set_resource_location(resource_path("edit_20x.png"),resource_path("delete_20x.png"))
+set_resource_location(
+    resource_path("edit_20x.png"), 
+    resource_path("delete_20x.png"), 
+    resource_path("plus_icon_pink_25x.png"), 
+    resource_path("minus_icon_pink_25x.png")
+)
 
 # default= makes it so other windows that are created also use this
 root.iconbitmap(default=resource_path("BunniSenpaiBot.ico"))
@@ -35,7 +40,7 @@ under_construction = ImageTk.PhotoImage(Image.open(resource_path("under_construc
 # Get list of commands from db
 commands = get_commands()
 
-# List of buttons for each command
+# List of ButtonLabel for each command
 button_list = []
 # commands.sort(key=lambda command: command.name)
 
@@ -80,11 +85,8 @@ timer_canvas.create_window((0,0), window=main_timer_frame, anchor="nw")
 label_construction = tk.Label(timer_canvas, image=under_construction, anchor="center")
 label_construction.pack(pady=250)
 
-# style_cmd = ttk.Style(main_cmd_frame)
-# style_cmd.theme_use('default')
-# style_timer = ttk.Style(main_timer_frame)
-# style_cmd.configure('TNotebook.Tab', background="pink" ,width=main_cmd_frame.winfo_screenwidth(), font=("Consolas", 15))
-# style_timer.configure('TNotebook.Tab', width=main_timer_frame.winfo_screenwidth(), font=("Consolas", 15))
+# Allows mousewheel scrolling to work anywhere on window
+cmd_canvas.bind_all('<MouseWheel>', lambda event: cmd_canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
 
 # Style each tab so it stretches across top of screen
 style = ttk.Style()
@@ -130,7 +132,7 @@ for command in commands:
     btn_delete = tk.Button(main_cmd_frame, image=delete_icon, bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda c=command: delete_command(c, root, button_list))
     btn_delete.grid(row=row_counter, column=2)
 
-    button_list.append(Buttons(command.name, label_command, label_text, btn_edit, btn_delete))
+    button_list.append(ButtonLabel(command.name, label_command, label_text, btn_edit, btn_delete))
     # print(button_list)
 
     row_counter = row_counter + 1
