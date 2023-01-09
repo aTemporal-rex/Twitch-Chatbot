@@ -32,7 +32,8 @@ const opts = {
         clientId: process.env.CLIENT_ID
     },
     connection: {
-        reconnect: true
+        reconnect: true,
+        reconnectInterval: 30000
     },
     identity: {
         username: process.env.BOT_USERNAME,
