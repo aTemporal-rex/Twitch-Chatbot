@@ -12,6 +12,8 @@ root = tk.Tk()
 root.title('BunniSenpaiBot')
 root.geometry('950x900')
 
+canvases = []
+
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -19,6 +21,44 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
+def add_new_feature(book, name, style):
+    # Create Tab Frames
+    frame = tk.Frame(book)
+
+    # Put the Tab Frames into notebook
+    book.add(frame, text=name, underline=0)
+
+    # Create canvas inside the Tab Frames
+    canvas = tk.Canvas(frame, bg=dark_theme.bg, relief="ridge", highlightthickness=0)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+    # Create ScrollBar inside the Tab Frames
+    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=canvas.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    # Set scrollbars to each canvas
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    # Creating internal frame for the command tab
+    main_frame = tk.Frame(canvas, bg=dark_theme.bg)
+    main_frame.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.create_window((0,0), window=main_frame, anchor="nw")
+
+    # Allows mousewheel scrolling to work anywhere on window
+    set_mousewheel(canvas, lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+
+    # Style each tab so it stretches across top of screen
+    style.configure('TNotebook.Tab', width=main_frame.winfo_screenwidth(), font=("Consolas", 15, "bold"), background=dark_theme.tab_bg, foreground=dark_theme.fg)
+
+    canvases.append(canvas)
+
+    return main_frame
+
+def set_mousewheel(canvas, command):
+    """Activate / deactivate mousewheel scrolling when cursor is over / not over the widget respectively."""
+    canvas.bind("<Enter>", lambda _: canvas.bind_all('<MouseWheel>', command))
+    canvas.bind("<Leave>", lambda _: canvas.unbind_all('<MouseWheel>'))
 
 # Set image location paths for command module
 set_resource_location(
@@ -37,61 +77,23 @@ delete_icon = ImageTk.PhotoImage(Image.open(resource_path("delete_20x.png")))
 add_icon = ImageTk.PhotoImage(Image.open(resource_path("add_blue_circle.png")))
 under_construction = ImageTk.PhotoImage(Image.open(resource_path("under_construction_anime.jpg")))
 
-# Get list of commands from db
+# Get list of commands from db and sort alphabetically
 commands = get_commands()
+commands.sort(key=lambda command: command.name)
 
 # List of ButtonLabel for each command
 button_list = []
-# commands.sort(key=lambda command: command.name)
 
 # Create NoteBook
 book = ttk.Notebook(root)
 book.pack(fill=tk.BOTH, expand=1)
 
-# Create Tab Frames
-tab_cmd_frame = tk.Frame(book)
-tab_timer_frame = tk.Frame(book)
-
-# Put the Tab Frames into notebook
-book.add(tab_cmd_frame, text="Commands", underline=0)
-book.add(tab_timer_frame, text="Timers", underline=0)
-
-# Create canvas inside the Tab Frames
-cmd_canvas = tk.Canvas(tab_cmd_frame, bg=dark_theme.bg, relief="ridge", highlightthickness=0)
-timer_canvas = tk.Canvas(tab_timer_frame, bg=dark_theme.bg, relief="ridge", highlightthickness=0)
-cmd_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-timer_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-
-# Create ScrollBar inside the Tab Frames
-cmd_scrollbar = ttk.Scrollbar(tab_cmd_frame, orient=tk.VERTICAL, command=cmd_canvas.yview)
-timer_scrollbar = ttk.Scrollbar(timer_canvas, orient=tk.VERTICAL, command=timer_canvas.yview)
-cmd_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-timer_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-# Set scrollbars to each canvas
-cmd_canvas.configure(yscrollcommand=cmd_scrollbar.set)
-timer_canvas.configure(yscrollcommand=timer_scrollbar.set)
-
-# Creating internal frame for the command tab
-main_cmd_frame = tk.Frame(cmd_canvas, bg=dark_theme.bg)
-main_cmd_frame.bind('<Configure>', lambda e: cmd_canvas.configure(scrollregion=cmd_canvas.bbox("all")))
-cmd_canvas.create_window((0,0), window=main_cmd_frame, anchor="nw")
-
-# Creating internal frame for the timer tab
-main_timer_frame = tk.Frame(timer_canvas, bg=dark_theme.bg)
-main_timer_frame.bind('<Configure>', lambda e: timer_canvas.configure(scrollregion=timer_canvas.bbox("all")))
-timer_canvas.create_window((0,0), window=main_timer_frame, anchor="nw")
-
-label_construction = tk.Label(timer_canvas, image=under_construction, anchor="center")
-label_construction.pack(pady=250)
-
-# Allows mousewheel scrolling to work anywhere on window
-cmd_canvas.bind_all('<MouseWheel>', lambda event: cmd_canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
-
-# Style each tab so it stretches across top of screen
 style = ttk.Style()
 style.theme_use('default')
-style.configure('TNotebook.Tab', width=main_cmd_frame.winfo_screenwidth(), font=("Consolas", 15, "bold"), background=dark_theme.tab_bg, foreground=dark_theme.fg)
+
+main_cmd_frame = add_new_feature(book, "Commands", style)
+main_timer_frame = add_new_feature(book, "Timers", style)
+main_queue_frame = add_new_feature(book, "Queue", style)
 
 # Removes dotted line on tab focus
 style.layout("Tab",

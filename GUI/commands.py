@@ -13,11 +13,11 @@ import os
 dbname = get_database()
 
 # Create a new collection
-collection_name = dbname["commands"]
-collection_name.create_index('name', unique = True)
+commands_collection = dbname["commands"]
+commands_collection.create_index('name', unique = True)
 commands = []
-cmds = collection_name.find()
-# testing_change = collection_name.update_many({}, { "$set": { "onCooldown": False } })
+cmds = commands_collection.find()
+# testing_change = commands_collection.update_many({}, { "$set": { "onCooldown": False } })
 # print(testing_change)
 
 reCmd = r"![\w]{1,13}$"
@@ -83,10 +83,10 @@ def update_button_label(mode, root, button, button_list, new_command, response_t
       button.delete_button.configure(command=lambda c=new_command: delete_command(c, root, button_list))
       button.label_text.set(f"{new_command.name :<15}" + f"{response_text.strip() :<75}")
    elif mode == 'Delete':
-         button.label.destroy()
-         button.edit_button.destroy()
-         button.delete_button.destroy()
-         return
+      button.label.destroy()
+      button.edit_button.destroy()
+      button.delete_button.destroy()
+      return
 
 def get_commands():
    for cmd in cmds:
@@ -266,7 +266,7 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
             return
 
          document = new_command.to_document()
-         result = collection_name.insert_one(document)
+         result = commands_collection.insert_one(document)
 
          if result.inserted_id:
             label_text = StringVar()
@@ -316,7 +316,7 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
       
       if (cmd_match):
          # Check for other commands with the same name as the new command being added
-         command_exists = collection_name.count_documents(query_check, limit = 1)
+         command_exists = commands_collection.count_documents(query_check, limit = 1)
          if command_exists:
             messagebox.showerror('Invalid Command', 'Error: Command already exists!', parent=window)
             return
@@ -329,7 +329,7 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
          else:
             update_values = { "$set": { "name": new_name, "response": new_response, "cooldown": new_cooldown, "permission": new_permission } }
          
-         updated_command = collection_name.find_one_and_update(query_find, update_values, return_document=ReturnDocument.AFTER)      
+         updated_command = commands_collection.find_one_and_update(query_find, update_values, return_document=ReturnDocument.AFTER)      
          if updated_command:
             new_command = Command.from_document(updated_command)
             if len(new_command.response) > 70:
@@ -360,7 +360,7 @@ def delete_command(command, root, button_list):
    
    result = messagebox.askyesno("Delete Command", f"Are you sure you want to permanently delete {command.name}")
    if result:
-      deleted_command = collection_name.find_one_and_delete(query_find)
+      deleted_command = commands_collection.find_one_and_delete(query_find)
       if deleted_command:
          new_command = Command.from_document(deleted_command)
          if len(new_command.response) > 70:

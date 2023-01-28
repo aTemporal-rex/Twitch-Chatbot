@@ -1,7 +1,7 @@
 const CommandModel = require('../models/command');
 const PokemonModel = require('../models/pokemon');
 const { onQueueHandler } = require('./queuecontroller');
-const { onLoopHandler } = require('./loopcontroller');
+const { onLoopHandler } = require('./timercontroller');
 const { tellJoke } = require('./jokecontroller');
 const { getChosenPokemon, evolve, onDuel, startPokemon, stopPokemon } = require('./pokemoncontroller');
 const { getAnime } = require('../animesgetter');
@@ -45,7 +45,6 @@ let cmdOnCooldown = false, jokeOnCooldown = false, rollOnCooldown = false, cmdFo
 const commands = [];
 
 // Whenever the commands collection is changed, it triggers this event that updates the local commands array
-// TODO Add handling for deleted command
 const commandEventEmitter = CommandModel.watch();
 commandEventEmitter.on('change', change => {
     changeJson = change;
@@ -486,20 +485,22 @@ async function onCommandHandler (target, context, commandName, client) {
             };
 
             const result = await CommandModel.findOne(filter);
+            
+            try {
+                const hasPermission = Object.keys(result.permission).some(key => result.permission[key] && userPermission[key]);
 
-            const hasPermission = Object.keys(result.permission).some(key => result.permission[key] && userPermission[key]);
-            console.log(hasPermission)
-            console.log(JSON.stringify(commands[1].permission))
+                // If user has permission and command exists
+                if (hasPermission && result) {
+                    if (ADMIN_PERMISSION === false) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
+                    if (dbOnCooldown(result, ADMIN_PERMISSION)) { return; } // Uses result of DB search to see if cooldown needs to be enabled
+                    client.say(target, `${result.response}`);
 
-            // If user has permission and command exists
-            if (hasPermission && result) {
-                if (ADMIN_PERMISSION === false) { cmdFound = true; } // If not admin and cmd is found, sets cmdFound to true
-                if (dbOnCooldown(result, ADMIN_PERMISSION)) { return; } // Uses result of DB search to see if cooldown needs to be enabled
-                client.say(target, `${result.response}`);
-
-                logCommand(commandName, result);
+                    logCommand(commandName, result);
+                }
+                else { console.log('User does not have required permission!'); }
+            } catch (ex) {
+                console.log(ex)
             }
-            else { console.log('User does not have required permission!'); }
 
         } else {
             console.log(`* Unknown command ${commandName}`);
