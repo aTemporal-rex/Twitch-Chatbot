@@ -1,12 +1,14 @@
 const tmi = require('tmi.js');
 const express = require('express');
 const helmet = require("helmet");
+const StatusModel = require("./models/status");
 const { onCommandHandler, getCommands } = require('./controllers/commandcontroller');
 // const { onSneezeHandler, initSneeze } = require('./controllers/sneezecontroller');
 const { initEmotes, onEmoteHandler } = require('./controllers/emotecontroller');
 // const { checkDuelResult } = require('./controllers/pokemoncontroller');
 const { initScare } = require('./controllers/scarecontroller');
 const db = require('./db');
+const { getQueue, getQueueStatus } = require('./controllers/queuecontroller');
 // const { onFartHandler } = require('./controllers/fartcontroller');
 require('dotenv').config();
 
@@ -93,6 +95,7 @@ async function onMessageHandler (target, context, msg, self) {
 async function onConnectedHandler (addr, port) {
     await initEmotes(emoticons);
     await getCommands();
+    await getQueue();
 
     console.log(`* Connected to ${addr}:${port}`);
 
@@ -102,6 +105,47 @@ async function onConnectedHandler (addr, port) {
     // Declare the glorious arrival of Bunni Senpai Bot
     client.say(process.env.CHANNEL_NAME, "Bunni Senpai has arrived!! GuobaHi");
 }
+
+const statusEventEmitter = StatusModel.watch();
+statusEventEmitter.on('change', async change => {
+    changeJson = change;
+    try {
+
+        if (changeJson.operationType === "insert") {
+            console.log("\n** Document Inserted **");
+
+            // Add new document to local commands array
+            commands.push(changeJson.fullDocument);
+    
+        } else if (changeJson.operationType === "update") {
+            console.log("\n** Document Updated **");
+            
+            if (changeJson.updateDescription.updatedFields.isOn === true) {
+                await getQueueStatus(changeJson.updateDescription.updatedFields.isOn);
+                client.say("#" + process.env.DISPLAY_NAME, "Queue is now open, type !join to join");
+            }
+            else if (changeJson.updateDescription.updatedFields.isOn === false) {
+                await getQueueStatus(changeJson.updateDescription.updatedFields.isOn);
+                client.say("#" + process.env.DISPLAY_NAME, "Queue is now closed");
+            }
+            
+        } else if (changeJson.operationType === "delete") {
+            console.log("\n ** Document Deleted **");
+
+            // Get index of deleted command from local array
+            cmdIndex = commands.findIndex(command => command._id.toString() == changeJson.documentKey._id.toString());
+
+            // Remove command from commands array
+            commands.splice(cmdIndex, 1);
+        }
+        
+    } catch (err) {
+        console.error(err);
+    }
+    
+    console.log(change);
+});
+
 
 // This is necessary to prevent heroku from disconnecting
 app.listen(port, () => {

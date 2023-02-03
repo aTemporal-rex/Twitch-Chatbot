@@ -29,7 +29,10 @@ delete_icon = []
 plus_icon = []
 minus_icon = []
 
-def set_resource_location(relative_path, relative_path2, relative_path3, relative_path4):
+global resource_path_delete
+
+
+def set_resource_location_commands(relative_path, relative_path2, relative_path3, relative_path4):
     global resource_path_edit
     global resource_path_delete
     global resource_path_plus
@@ -76,11 +79,11 @@ class Command:
 def on_return(event, btn_save):
    btn_save.invoke()
 
-def update_button_label(mode, root, button, button_list, new_command, response_text):
+def update_button_label(mode, root=None, button=None, button_list=None, new_command=None, response_text=None):
    if mode == 'Update':
       button.name = new_command.name
       button.edit_button.configure(command=lambda c=new_command: edit_command(c, root, button_list))
-      button.delete_button.configure(command=lambda c=new_command: delete_command(c, root, button_list))
+      button.delete_button.configure(command=lambda c=new_command: delete_command(c, button_list))
       button.label_text.set(f"{new_command.name :<15}" + f"{response_text.strip() :<75}")
    elif mode == 'Delete':
       button.label.destroy()
@@ -100,6 +103,7 @@ def get_commands():
    return commands
 
 def generate_window(mode, command, root, button_list, main_cmd_frame=None):
+   # If window is already open then close it before opening new one
    for sapling in root.winfo_children():
         if isinstance(sapling, Toplevel):
             sapling.destroy()
@@ -126,92 +130,60 @@ def generate_window(mode, command, root, button_list, main_cmd_frame=None):
    plus_icon.append(ImageTk.PhotoImage(Image.open(resource_path_plus), master=window)) 
    minus_icon.append(ImageTk.PhotoImage(Image.open(resource_path_minus), master=window)) 
 
+   Label(window, text="Name: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=0, column=0, padx=(25,10), pady=20, sticky="w")
+   entry_name = Entry(window, textvariable=command_name, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
+   entry_name.focus_set()
+   entry_name.grid(row=0, column=1, sticky="w")
+
+   Label(window, text="Message: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=1, column=0, padx=(25,10), pady=20, sticky="w")
+   entry_response = Entry(window, textvariable=command_response, width=100, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
+   entry_response.grid(row=1, column=1, sticky="w")
+
+   Label(window, text="Cooldown(seconds): ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=2, column=0, padx=(25,10), pady=20, sticky="w")
+   cooldown_frame.grid(row=2, column=1, sticky="w")
+   entry_cooldown = Entry(cooldown_frame, textvariable=cooldown_counter, justify='center', width=5, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 18, "bold"))
+   btn_minus = Button(cooldown_frame, image=minus_icon[0], justify="center", borderwidth=0, bg=dark_theme.bg, activebackground=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: minus(cooldown_counter, window))
+   btn_plus = Button(cooldown_frame, image=plus_icon[0], justify="center", borderwidth=0, bg=dark_theme.bg, activebackground=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: plus(cooldown_counter))
+   btn_minus.pack(side="left", anchor="center", fill="both")
+   entry_cooldown.pack(side="left", anchor="center", fill="both", padx=10, pady=5)
+   btn_plus.pack(side="left", anchor="center", fill="both")
+
+   Label(window, text="Permissions: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=3, column=0, padx=(25,10), pady=20, sticky="w")
+   checkbox_frame.grid(row=3, column=1, sticky="nw")
+   checkbox_broadcaster = create_checkbox(checkbox_frame, text=f"{'Broadcaster' :<11}", variable=broadcaster_permission, command=None)
+   checkbox_moderators = create_checkbox(checkbox_frame, text=f"{'Moderators' :<11}", variable=moderators_permission, command=None)
+   checkbox_everyone = create_checkbox(checkbox_frame, text=f"{'Everyone' :<11}", variable=everyone_permission, command=lambda: handle_checkbox(checkbox_broadcaster, checkbox_moderators, broadcaster_permission, moderators_permission, everyone_permission))
+
+   Label(window, text="Alias: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=4, column=0, padx=(25,10), pady=(20,0), sticky="w")
+   entry_alias = Entry(window, textvariable=command_alias, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
+   entry_alias.grid(row=4, column=1, pady=(20,0), sticky="w")
+   
    if mode == "Add":
-      Label(window, text="Name: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=0, column=0, padx=(25,10), pady=20, sticky="w")
-      entry_name = Entry(window, textvariable=command_name, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
-      entry_name.focus_set()
-      entry_name.grid(row=0, column=1, sticky="w")
-
-      Label(window, text="Message: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=1, column=0, padx=(25,10), pady=20, sticky="w")
-      entry_response = Entry(window, textvariable=command_response, width=100, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
-      entry_response.grid(row=1, column=1, sticky="w")
-
-      Label(window, text="Cooldown(seconds): ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=2, column=0, padx=(25,10), pady=20, sticky="w")
-      cooldown_frame.grid(row=2, column=1, sticky="w")
-      entry_cooldown = Entry(cooldown_frame, textvariable=cooldown_counter, justify='center', width=5, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 18, "bold"))
       cooldown_counter.set(3)
-      btn_minus = Button(cooldown_frame, image=minus_icon[0], justify="center", borderwidth=0, bg=dark_theme.bg, activebackground=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: minus(cooldown_counter, window))
-      btn_plus = Button(cooldown_frame, image=plus_icon[0], justify="center", borderwidth=0, bg=dark_theme.bg, activebackground=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: plus(cooldown_counter))
-      btn_minus.pack(side="left", anchor="center", fill="both")
-      entry_cooldown.pack(side="left", anchor="center", fill="both", padx=10, pady=5)
-      btn_plus.pack(side="left", anchor="center", fill="both")
-
-      Label(window, text="Permissions: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=3, column=0, padx=(25,10), pady=20, sticky="w")
-      checkbox_frame.grid(row=3, column=1, sticky="nw")
-      checkbox_broadcaster = create_checkbox(checkbox_frame, text=f"{'Broadcaster' :<11}", variable=broadcaster_permission, command=None)
-      checkbox_moderators = create_checkbox(checkbox_frame, text=f"{'Moderators' :<11}", variable=moderators_permission, command=None)
-      checkbox_everyone = create_checkbox(checkbox_frame, text=f"{'Everyone' :<11}", variable=everyone_permission, command=lambda: handle_checkbox(checkbox_broadcaster, checkbox_moderators, broadcaster_permission, moderators_permission, everyone_permission))
-
-      Label(window, text="Alias: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=4, column=0, padx=(25,10), pady=(20,0), sticky="w")
-      entry_alias = Entry(window, textvariable=command_alias, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
-      entry_alias.grid(row=4, column=1, pady=(20,0), sticky="w")
-
       btn_save = Button(window, text="Save", bg="#5DF15D", height=2, width=25, activebackground="#86FF70", font=("Consolas", 12, "bold"), command=lambda: update_command('Add', None, root, window, button_list, command_name.get(), command_response.get(), cooldown_counter.get(), { "Broadcaster": broadcaster_permission.get(), "Moderators": moderators_permission.get(), "Everyone": everyone_permission.get() }, command_alias.get(), main_cmd_frame))
-      btn_save.grid(row=6, column=0, padx=(300,15), pady=20, columnspan=2, sticky="w")
-      btn_cancel = Button(window, text="Cancel", bg="#FF92A5", height=2, width=25, activebackground="pink", font=("Consolas", 12, "bold"), command=lambda: window.destroy()).grid(row=6, column=1, padx=(380,15), pady=20, columnspan=2, sticky="w")
-
-      # Allow for enter key to confirm data entry
-      window.bind('<Return>', lambda event, arg=btn_save: on_return(event, arg))
 
    elif mode == "Edit":
-      Label(window, text="Name: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=0, column=0, padx=(25,10), pady=20, sticky="w")
-      entry_name = Entry(window, textvariable=command_name, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
       entry_name.insert(0, command.name)
-      entry_name.focus_set()
-      entry_name.grid(row=0, column=1, sticky="w")
-
-      Label(window, text="Message: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=1, column=0, padx=(25,10), pady=20, sticky="w")
-      entry_response = Entry(window, textvariable=command_response, width=100, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
       entry_response.insert(0, command.response)
-      entry_response.grid(row=1, column=1, sticky="w")
-
-      Label(window, text="Cooldown(seconds): ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=2, column=0, padx=(25,10), pady=20, sticky="w")
-      cooldown_frame.grid(row=2, column=1, sticky="w")
-      entry_cooldown = Entry(cooldown_frame, textvariable=cooldown_counter, justify='center', width=5, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 18, "bold"))
       cooldown_counter.set(f"{command.cooldown/1000:.0f}")
-      btn_minus = Button(cooldown_frame, image=minus_icon[0], justify="center",  borderwidth=0, activebackground=dark_theme.bg, bg=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: minus(cooldown_counter, window))
-      btn_plus = Button(cooldown_frame, image=plus_icon[0], justify="center",  borderwidth=0, activebackground=dark_theme.bg, bg=dark_theme.bg, font=("Consolas", 18, "bold"), padx=10, command=lambda: plus(cooldown_counter))
-      btn_minus.pack(side="left", anchor="center", fill="both")
-      entry_cooldown.pack(side="left", anchor="center", fill="both", padx=10, pady=5)
-      btn_plus.pack(side="left", anchor="center", fill="both")
 
       broadcaster_permission.set(command.permission["Broadcaster"])
       moderators_permission.set(command.permission["Moderators"])
       everyone_permission.set(command.permission["Everyone"])
-
-      Label(window, text="Permissions: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=3, column=0, padx=(25,10), pady=20, sticky="w")
-      checkbox_frame.grid(row=3, column=1, sticky="nw")
-      checkbox_broadcaster = create_checkbox(checkbox_frame, text=f"{'Broadcaster' :<11}", variable=broadcaster_permission, command=None)
-      checkbox_moderators = create_checkbox(checkbox_frame, text=f"{'Moderators' :<11}", variable=moderators_permission,  command=None)
-      checkbox_everyone = create_checkbox(checkbox_frame, text=f"{'Everyone' :<11}", variable=everyone_permission, command=lambda: handle_checkbox(checkbox_broadcaster, checkbox_moderators, broadcaster_permission, moderators_permission, everyone_permission))
-
       if everyone_permission.get():
          broadcaster_permission.set(1)
          moderators_permission.set(1)
          checkbox_broadcaster.config(state="disabled")
-         checkbox_moderators.config(state="disabled")
-      
-      Label(window, text="Alias: ", bg=dark_theme.bg, fg=dark_theme.fg, font=("Consolas", 14, "bold")).grid(row=4, column=0, padx=(25,10), pady=(20,0), sticky="w")
-      entry_alias = Entry(window, textvariable=command_alias, bg=dark_theme.entry_bg, fg=dark_theme.fg, font=("Consolas", 12, "bold"))
-      entry_alias.grid(row=4, column=1, pady=(20,0), sticky="w")
+         checkbox_moderators.config(state="disabled")     
+
       Label(window, text=command.alias, bg=dark_theme.bg, fg="gray", font=("Consolas", 12, "bold")).grid(row=5, column=1, sticky="w")
+      btn_save = Button(window, text="Save", bg="#5DF15D", height=2, width=25, activebackground="#86FF70", font=("Consolas", 12, "bold"), command=lambda: update_command('Edit', command, root, window, button_list, command_name.get(), command_response.get(), cooldown_counter.get(), { "Broadcaster": broadcaster_permission.get(), "Moderators": moderators_permission.get(), "Everyone": everyone_permission.get() }, command_alias.get()))    
+   
+   btn_save.grid(row=6, column=0, padx=(300,15), pady=20, columnspan=2, sticky="w")
+   btn_cancel = Button(window, text="Cancel", bg="#FF92A5", height=2, width=25, activebackground="pink", font=("Consolas", 12, "bold"), command=lambda: window.destroy()).grid(row=6, column=1, padx=(380,15), pady=20, columnspan=2, sticky="w")
 
-      btn_save = Button(window, text="Save", bg="#5DF15D", height=2, width=25, activebackground="#86FF70", font=("Consolas", 12, "bold"), command=lambda: update_command('Edit', command, root, window, button_list, command_name.get(), command_response.get(), cooldown_counter.get(), { "Broadcaster": broadcaster_permission.get(), "Moderators": moderators_permission.get(), "Everyone": everyone_permission.get() }, command_alias.get()))
-      btn_save.grid(row=6, column=0, padx=(300,15), pady=20, columnspan=2, sticky="w")
-      btn_cancel = Button(window, text="Cancel", bg="#FF92A5", height=2, width=25, activebackground="pink", font=("Consolas", 12, "bold"), command=lambda: window.destroy()).grid(row=6, column=1, padx=(380,15), pady=20, columnspan=2, sticky="w")
-
-      # Allow for enter key to confirm data entry
-      window.bind('<Return>', lambda event, arg=btn_save: on_return(event, arg))
+   # Allow for enter key to confirm data entry
+   window.bind('<Return>', lambda event, arg=btn_save: on_return(event, arg))
 
 def add_command(root, button_list, main_cmd_frame):
    generate_window("Add", None, root, button_list, main_cmd_frame)
@@ -287,7 +259,7 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
             btn_edit = Button(main_cmd_frame, image=edit_icon[0], bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda c=new_command: edit_command(c, root, button_list))
             btn_edit.grid(row=row, column=1, padx=5)
 
-            btn_delete = Button(main_cmd_frame, image=delete_icon[0], bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda c=new_command: delete_command(c, root, button_list))
+            btn_delete = Button(main_cmd_frame, image=delete_icon[0], bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda c=new_command: delete_command(c, button_list))
             btn_delete.grid(row=row, column=2)
 
             button_list.append(ButtonLabel(new_command.name, label_command, label_text, btn_edit, btn_delete))
@@ -298,7 +270,7 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
       elif len(new_name) > 13:
          messagebox.showerror('Invalid Command', 'Error: Please keep command name 13 or less characters', parent=window)
       else:
-         messagebox.showerror('Invalid Command', 'Error: Please enter a command name of the format !word', parent=window)
+         messagebox.showerror('Invalid Command', 'Error: Please enter a command name of the format !command', parent=window)
          return
 
    # Editing currently existing command
@@ -355,35 +327,19 @@ def update_command(mode, old_command, root, window, button_list, new_name, new_r
 def edit_command(command, root, button_list):
    generate_window('Edit', command, root, button_list)
 
-def delete_command(command, root, button_list):
+def delete_command(command, button_list):
    query_find = { "name": command.name }
    
    result = messagebox.askyesno("Delete Command", f"Are you sure you want to permanently delete {command.name}")
    if result:
       deleted_command = commands_collection.find_one_and_delete(query_find)
       if deleted_command:
-         new_command = Command.from_document(deleted_command)
-         if len(new_command.response) > 70:
-            response_text = new_command.response[:70] + "..."
-         else:
-            response_text = new_command.response
-
          for button in button_list:
             if button.name == command.name: 
-               update_button_label('Delete', root, button, button_list, new_command, response_text)
+               update_button_label('Delete', button=button)
       else:
          print("Didn't find deleted_command")
          messagebox.showerror("Delete Command", "There was a problem deleting the command. Please message the godgamer epic legend")
          return
    else:
       return
-
-   
-
-   
-
-# if __name__ == "__main__":   
-  
-#    # Get the commands
-#    commands = get_commands()
-
