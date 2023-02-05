@@ -2,10 +2,10 @@ const QueueModel = require('../models/queue');
 const StatusModel = require('../models/status');
 const db = require('../db');
 
-const reNext = /^!next ?\d{0,2}$/i;
+// const reNext = /^!next ?\d{0,2}$/i;
+const reNext = /^!next$/i;
 
 const queue = [],   // Array containing the people coming up in the queue
-      current = [], // Array containing the people currently up in the queue
       MAX_QTY = 15,
       filterStatus = { name: "Queue" }
       options = {upsert: true, new: true, setDefaultsOnInsert: true };
@@ -22,8 +22,9 @@ queueEventEmitter.on('change', change => {
             console.log("\n** Document Inserted **");
             
             ++nextPosition;
+
             // Add new document to local queue array
-            // queue.push(changeJson.fullDocument);
+            queue.push(changeJson.fullDocument);
     
         } else if (changeJson.operationType === "update") {
             console.log("\n** Document Updated **");
@@ -33,12 +34,14 @@ queueEventEmitter.on('change', change => {
             console.log("\n ** Document Deleted **");
 
             --nextPosition;
+            console.log(changeJson)
 
             // Get index of deleted user from local array
-            // queueIndex = queue.findIndex(user => user._id.toString() == changeJson.documentKey._id.toString());
+            queueIndex = queue.findIndex(user => user._id.toString() == changeJson.documentKey._id.toString());
+            console.log(queueIndex)
 
-            // Remove command from commands array
-            // queue.splice(queueIndex, 1);
+            // Remove user from queue array
+            queue.splice(queueIndex, 1);
         }
         
     } catch (err) {
@@ -63,10 +66,12 @@ async function getQueue() {
     users = await QueueModel.find();
     console.log(users);
     users.forEach(user => {
-        queue.push(user.name);
-    })
-    console.log(queue);
-    
+        queue.push({ 
+            _id: user._id, 
+            name: user.name, 
+            position: user.position 
+        });
+    })    
 }
 
 function getPositionWithOrdinal(position) {
@@ -130,15 +135,14 @@ async function onQueueHandler (target, context, commandName, client) {
         }
 
         if (reNext.test(commandName)) {
-            const quantity = commandName.replace(/\D/g, '');
-            quantity ? onNextQueue(target, client, quantity) : onNextQueue();
+            await onNextQueue();
             onDisplayQueue(target, client, commandName, ADMIN_PERMISSION);
             return;
         }
     }
 
     // Check if queue has been opened before continuing. !bqueue and !bcurrent are still allowed while queue is closed if they are not empty
-    if (queueOpen === false && (queue.length > 0 || current.length > 0)) { 
+    if (queueOpen === false && queue.length > 0) { 
 
         if (commandName === '!pos' || commandName === '!position') {
             getPosition(target, client, user);
@@ -193,48 +197,44 @@ function onDisplayQueue(target, client, commandName, ADMIN_PERMISSION) {
                 queue.length > 0 ? console.log(`Queue order: ${queue.slice(0, MAX_QTY)}`) : console.log('Queue is empty');
                 return;
             case '!bcurrent':
-                current.length > 0 ? client.say(target, `Currently up: ${current.join(', ')}`) : client.say(target, 'No current players');
-                current.length > 0 ? console.log(`Current order: ${current}`) : console.log('No current players');
+                queue.length > 0 ? client.say(target, `${queue[0].name}, you're up now!`) : client.say(target, 'Queue is empty');
+                queue.length > 0 ? console.log(`${queue[0].name}, you're up now!`) : console.log('Queue is empty');
                 return;
         }
 
         if (reNext.test(commandName)) {
-            current.length > 0 ? client.say(target, `Next up: ${current.join(', ')}`) : client.say(target, 'Queue is empty');
-            current.length > 0 ? console.log(`Next up: ${current}`) : console.log('Queue is empty');
+            queue.length > 0 ? client.say(target, `${queue[0].name}, you're up now!`) : client.say(target, 'Queue is empty');
+            queue.length > 0 ? console.log(`${queue[0].name}, you're up now!`) : console.log('Queue is empty');
             return;
         }
     }
 }
 
 async function onJoinQueue (user) {
-    const index = queue.findIndex(element => element === user); // Getting index to see if user is already in queue
+    const index = queue.findIndex(element => element.name === user); // Getting index to see if user is already in queue
     const newUser = { "name": user, "position": nextPosition }
-    if (index === -1) {
-        queue.push(user);
-        const result = await QueueModel.create(newUser);
-        console.log(result);
-        console.log(`${user} added to queue`);
-    } else {
-        console.log(`${user} already in queue`);
+    try {
+        if (index === -1) {
+            const result = await QueueModel.create(newUser);
+            queue.push({ 
+                _id: result._id, 
+                name: result.name, 
+                position: result.position 
+            });
+            console.log(result);
+            console.log(`${user} added to queue`);
+        } else { console.log(`${user} already in queue`); }
+    } catch (err) {
+        console.log(err);
     }
+    
 }
 
-function onNextQueue (target, client, quantity = 1) {
-    // Checks to make sure quantity is within a reasonable range to avoid flooding chat
-    if (quantity > MAX_QTY) {
-        client.say(target, `Please select a value less than ${MAX_QTY + 1}`);
-        console.log(`Please select a value less than ${MAX_QTY + 1}`);
-        return;
-    }
-
-    // Resets the current array
-    if (current.length > 0) { current.length = 0; }
-
-    let i = 0;
-    while ( i < quantity ) {
-        if (queue.length > 0) { current.push(queue.shift()); }
-        ++i;
-    }
+async function onNextQueue () {
+    await QueueModel.findOneAndDelete({ position: 1 })
+    await QueueModel.updateMany({}, { "$inc": { position: -1 } })
+    queue.forEach(user => user.position -= 1)
+    console.log(queue)
 }
 
 function onClearQueue (commandName) {
@@ -243,14 +243,12 @@ function onClearQueue (commandName) {
         console.log('Queue has been cleared');
     } else {
         queue.length = 0;
-        current.length = 0;
         console.log('Queue has been closed');
     } 
 }
 
 const getPosition = (target, client, user) => {
     const position = queue.findIndex(element => element === user) + 1;
-    const currentlyPlaying = current.findIndex(element => element === user);
     const displayPosition = getPositionWithOrdinal(position);
 
     if (position === 0) {
@@ -259,7 +257,7 @@ const getPosition = (target, client, user) => {
     } else if (position > 0) {
         client.say(target, `${user}, you're ${displayPosition} in queue`);
         console.log(`${user}, you're ${displayPosition} in queue`);
-    } else if (currentlyPlaying != -1) {
+    } else if (position === 0) {
         client.say(target, `${user} you're up!`);
         console.log(`${user} you're up!`);
     } 

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const QueueSchema = new mongoose.Schema({
-    name: { type: String },
+    name: { type: String, unique: true },
     position: Number
 });
 

@@ -15,22 +15,13 @@ dbname = get_database()
 
 queue_collection = dbname["queues"]
 status_collection = dbname["status"]
-# queue_collection.create_index('name', unique = True)
+queue_collection.create_index('name', unique = True)
 queue = []
 test_queue = []
 buttons = Buttons()
 
 button_labels = []
 delete_icon = []
-
-def set_resource_location_queue(relative_path):
-    global resource_path_delete
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    resource_path_delete = os.path.join(base_path, relative_path)
 
 class Queue:
     def __init__(self, id, name, position):
@@ -64,9 +55,6 @@ def get_queue(users=None):
                     ))
     return queue
 
-def on_space(event, btn_next):
-    btn_next.invoke()
-
 def generate_queue_window(root, main_queue_frame, delete_icon, moon_icon, death_icon, dab_icon, boba_icon, hammer_icon, refresh_icon):
     btn_start = tk.Button(main_queue_frame, image=death_icon, text="IT BEGINS...\n(start queue)", compound="left", bg=dark_theme.start_bg, activebackground=dark_theme.start_abg, font=("Consolas", 12, "bold"), padx=5, command=lambda: start_queue(death_icon, boba_icon))
     btn_start.grid(row=0, column=0, padx=(20,20), pady=(10,50), sticky="nw")
@@ -81,8 +69,6 @@ def generate_queue_window(root, main_queue_frame, delete_icon, moon_icon, death_
     # btn_refresh.grid(row=0, column=0, padx=(10,20), pady=10, sticky="nw")
     # btn_refresh.grid(row=0, column=0, padx=(870,0), pady=10, sticky="nw")
     btn_refresh.place(x=600,y=300)
-
-    main_queue_frame.bind('<space>', lambda event, arg=btn_refresh: on_space(event, arg))
 
     buttons.start_button = btn_start
     buttons.next_button = btn_next
@@ -164,16 +150,17 @@ def clear_queue():
     if len(button_labels) == 0:
         return
 
-    deleted_users = queue_collection.delete_many({})
-    print(deleted_users)
-    if deleted_users:
-        button_labels[0].label.destroy()
-        for user in button_labels[1:]:
-            user.label.destroy()
-            user.delete_button.destroy()
-        button_labels.clear()
-        queue.clear()
-    return
+    if messagebox.askyesno("Clear Queue", f"Are you sure you want to bop the queue? Bops hurt, you know!"):
+        deleted_users = queue_collection.delete_many({})
+        print(deleted_users)
+        if deleted_users:
+            button_labels[0].label.destroy()
+            for user in button_labels[1:]:
+                user.label.destroy()
+                user.delete_button.destroy()
+            button_labels.clear()
+            queue.clear()
+        return
 
 def refresh(main_queue_frame, moon_icon, delete_icon):
     last_position = len(queue) + 1
@@ -195,7 +182,7 @@ def refresh(main_queue_frame, moon_icon, delete_icon):
             label_queue.grid(row=row_counter, column=0, padx=(15,15), pady=(5,10), sticky="w")
             label_queue_text.set(f"{user.position :<3}" + f"{user.name :<26}")
 
-            btn_delete = tk.Button(main_queue_frame, image=delete_icon, bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda u=user: remove_user(u, button_labels))
+            btn_delete = tk.Button(main_queue_frame, image=delete_icon, bg=dark_theme.btn_bg, activebackground=dark_theme.abg, command=lambda u=user: remove_user(u))
             btn_delete.grid(row=row_counter, column=0, padx=(470,0), sticky="w")
 
             button_labels.append(ButtonLabel(user.name, label_queue, label_queue_text, delete_button=btn_delete))
@@ -206,21 +193,39 @@ def refresh(main_queue_frame, moon_icon, delete_icon):
     return
 
 def remove_user(user):
-   query_find = { "name": user.name }
+    query_find = { "name": user.name }
+    position = user.position
    
-   if messagebox.askyesno("Remove User", f"Are you sure you want to remove {user.name} from queue?"):
+    if messagebox.askyesno("Remove User", f"Are you sure you want to remove {user.name} from queue?"):
       user_removed = queue_collection.find_one_and_delete(query_find)
       if user_removed:
          for button in button_labels:
             if button.name == user.name: 
                 button.label.destroy()
                 button.delete_button.destroy()
+                index = button_labels.index(button)
+                button_labels.remove(button)
+                break
       else:
          print("Didn't find user_removed")
          messagebox.showerror("Remove User", "There was a problem removing the user. Please message the godgamer epic legend")
          return
-   else:
-      return
+    else:
+        return
+
+    print(button_labels[index:])
+    # Decrement rest of position values on labels
+    for button_label in button_labels[index:]:
+        new_position = int(button_label.label_text.get().split()[0]) - 1
+        button_label.label_text.set(f"{new_position :<3}" + f"{button_label.name :<26}")
+
+    # Decrement local queue positions
+    for u in queue:
+        if u.position > position:
+            u.position -= 1
+            
+    update_positions = queue_collection.update_many({"position": { "$gt": position }}, { "$inc": { "position": -1 } })
+
 
 def enable_button(*button):
     print(button)
