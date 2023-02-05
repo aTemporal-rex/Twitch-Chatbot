@@ -122,11 +122,11 @@ statusEventEmitter.on('change', async change => {
             
             if (changeJson.updateDescription.updatedFields.isOn === true) {
                 await getQueueStatus(changeJson.updateDescription.updatedFields.isOn);
-                client.say("#" + process.env.DISPLAY_NAME, "Queue is now open, type !join to join");
+                client.say("#" + process.env.CHANNEL_NAME, "Queue is now open, type !join to join");
             }
             else if (changeJson.updateDescription.updatedFields.isOn === false) {
                 await getQueueStatus(changeJson.updateDescription.updatedFields.isOn);
-                client.say("#" + process.env.DISPLAY_NAME, "Queue is now closed");
+                client.say("#" + process.env.CHANNEL_NAME, "Queue is now closed");
             }
             
         } else if (changeJson.operationType === "delete") {

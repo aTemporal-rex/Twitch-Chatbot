@@ -11,7 +11,6 @@ const { rollDice } = require('./rolldice');
 const db = require('../db');
 // const pokemon = require('../models/pokemon');
 const { get } = require('request');
-// const { setTimeout } = require('node:timers/promises');
 require('dotenv').config();
 
 const options = {upsert: true, new: true, setDefaultsOnInsert: true };
@@ -113,7 +112,7 @@ const getPageCountAvgScore = async (mediaType) => {
 // Called everytime a command is given
 async function onCommandHandler (target, context, commandName, client) {
     // If user is admin, sets value to true. Otherwise, sets value to false
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.CHANNEL_NAME ? true : false;
     const userPermission = getPermission(context);
 
     // Initializes animePageCount and mangaPageCount if they are still undefined
@@ -512,7 +511,7 @@ async function onCommandHandler (target, context, commandName, client) {
 }
 
 const dbOnCooldown = (command, context) => {
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.CHANNEL_NAME ? true : false;
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(command.name)) { return; } // Ignore cooldown for queue usage
@@ -543,7 +542,7 @@ const dbOnCooldown = (command, context) => {
 }
 
 const onCooldown = (command, context) => {
-    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.DISPLAY_NAME ? true : false;
+    const ADMIN_PERMISSION = context.mod === true ? true : context['user-id'] === context['room-id'] ? true : context['display-name'] === process.env.CHANNEL_NAME ? true : false;
 
     if (ADMIN_PERMISSION === true) { return; } // If admin, ignore cooldown
     if (reQueue.test(command)) { return; } // Ignore cooldown for queue usage
@@ -622,7 +621,7 @@ const getPermission = (context) => {
             Everyone: 1 
         };
     }
-    else if (context['display-name'] === process.env.DISPLAY_NAME) {
+    else if (context['display-name'] === process.env.CHANNEL_NAME) {
         return { 
             Broadcaster: 1, 
             Moderators: 1, 

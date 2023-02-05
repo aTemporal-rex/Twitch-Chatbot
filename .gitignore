@@ -11,3 +11,7 @@ GUI/dist
 GUI/build
 GUI/__pycache__
 BunniSenpaiBot.spec
+
+# images
+GUI/*.png
+GUI/*.jpg
