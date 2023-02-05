@@ -29,9 +29,6 @@ delete_icon = []
 plus_icon = []
 minus_icon = []
 
-global resource_path_delete
-
-
 def set_resource_location_commands(relative_path, relative_path2, relative_path3, relative_path4):
     global resource_path_edit
     global resource_path_delete

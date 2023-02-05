@@ -1,14 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
-from tkinter import ttk
-from PIL import ImageTk,Image
 from db import get_database
-import re
 from themes import light_theme,dark_theme
 from utilities import Buttons,ButtonLabel
 from pymongo.collection import ReturnDocument
 from pymongo import ASCENDING
-import os
 from threading import Timer
 
 dbname = get_database()
@@ -58,16 +54,11 @@ def get_queue(users=None):
 def generate_queue_window(root, main_queue_frame, delete_icon, moon_icon, death_icon, dab_icon, boba_icon, hammer_icon, refresh_icon):
     btn_start = tk.Button(main_queue_frame, image=death_icon, text="IT BEGINS...\n(start queue)", compound="left", bg=dark_theme.start_bg, activebackground=dark_theme.start_abg, font=("Consolas", 12, "bold"), padx=5, command=lambda: start_queue(death_icon, boba_icon))
     btn_start.grid(row=0, column=0, padx=(20,20), pady=(10,50), sticky="nw")
-    # btn_start.grid(row=0, column=0, padx=(80,20), pady=(10,50), sticky="nw")
     btn_next = tk.Button(main_queue_frame, image=dab_icon, text="DAB ON'EM\n(next)", compound="left", bg="violet", activebackground=dark_theme.abg, font=("Consolas", 12, "bold"), padx=5, command=lambda: next_queue(root, moon_icon))
     btn_next.grid(row=0, column=0, padx=(225,0), pady=10, sticky="nw")
-    # btn_next.grid(row=0, column=0, padx=(280,0), pady=10, sticky="nw")
     btn_clear = tk.Button(main_queue_frame, image=hammer_icon, text="PURGE", compound="left", bg="red", activebackground="#FF5C5C", font=("Consolas", 12, "bold"), padx=5, command=lambda: clear_queue())
-    # btn_clear.grid(row=0, column=0, padx=(800,0), pady=10, sticky="nw")
     btn_clear.grid(row=0, column=0, padx=(395,0), pady=10, sticky="nw")
     btn_refresh = tk.Button(main_queue_frame, image=refresh_icon, height=250, width=250, bg="#404040", activebackground="#545454", padx=5, command=lambda: refresh(main_queue_frame, moon_icon, delete_icon))
-    # btn_refresh.grid(row=0, column=0, padx=(10,20), pady=10, sticky="nw")
-    # btn_refresh.grid(row=0, column=0, padx=(870,0), pady=10, sticky="nw")
     btn_refresh.place(x=600,y=300)
 
     buttons.start_button = btn_start
@@ -213,7 +204,6 @@ def remove_user(user):
     else:
         return
 
-    print(button_labels[index:])
     # Decrement rest of position values on labels
     for button_label in button_labels[index:]:
         new_position = int(button_label.label_text.get().split()[0]) - 1
@@ -225,7 +215,6 @@ def remove_user(user):
             u.position -= 1
             
     update_positions = queue_collection.update_many({"position": { "$gt": position }}, { "$inc": { "position": -1 } })
-
 
 def enable_button(*button):
     print(button)
