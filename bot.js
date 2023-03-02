@@ -54,7 +54,11 @@ client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
 
 // Connect to Twitch
-client.connect();
+try {
+    client.connect();
+} catch (ex) {
+    console.log(`Failed to connnect to twitch`);
+}
 
 // Called every time a message comes in
 async function onMessageHandler (target, context, msg, self) {
